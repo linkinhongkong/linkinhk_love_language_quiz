@@ -1207,21 +1207,21 @@ function LinkInSignup() {
           <div className="field-label">🎂 生日 <span className="req">*</span></div>
           <div className="dob-row">
             <div className="dob-group">
-              <div className="dob-label">Year</div>
+              <div className="dob-label">年</div>
               <select className="dob-select" value={form.birthYear} onChange={e => set("birthYear", e.target.value)}>
                 <option value=""></option>
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
             <div className="dob-group">
-              <div className="dob-label">Month</div>
+              <div className="dob-label">月</div>
               <select className="dob-select" value={form.birthMonth} onChange={e => set("birthMonth", e.target.value)}>
                 <option value=""></option>
                 {months.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
               </select>
             </div>
             <div className="dob-group">
-              <div className="dob-label">Day</div>
+              <div className="dob-label">日</div>
               <select className="dob-select" value={form.birthDay} onChange={e => set("birthDay", e.target.value)}>
                 <option value=""></option>
                 {days.map(d => <option key={d} value={d}>{d}</option>)}
@@ -1232,13 +1232,13 @@ function LinkInSignup() {
         </div>
         <div className="field">
           <div className="field-label">📧 電郵地址 <span className="req">*</span></div>
-          <div className="field-hint">請確保電郵正確，我哋會用呢個電郵發送配對結果俾你 💌</div>
-          <input className="text-input" type="email" placeholder="your@email.com" value={form.email} onChange={e => set("email", e.target.value)} />
+          <div className="field-hint">我哋會發送配對結果去你呢個電郵, 請確保電郵正確 💌</div>
+          <input className="text-input" type="email" placeholder="" value={form.email} onChange={e => set("email", e.target.value)} />
           <ErrorMsg field="email" />
         </div>
         <div className="field">
           <div className="field-label">Instagram 名稱 <span className="req">*</span></div>
-          <input className="text-input" placeholder="@your_handle" value={form.instagram} onChange={e => set("instagram", e.target.value)} />
+          <input className="text-input" placeholder="" value={form.instagram} onChange={e => set("instagram", e.target.value)} />
           <ErrorMsg field="instagram" />
         </div>
       </div>
