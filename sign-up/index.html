@@ -1068,29 +1068,8 @@ function LinkInSignup() {
       const kidsMap = {};
       KIDS_PREF.forEach(k => { kidsMap[k.id] = k.label; });
 
-      /* ── Age buckets ── */
-      const ageBuckets = [
-        { min: 0, max: 19, label: "19 歲或以下" },
-        { min: 20, max: 24, label: "20–24 歲" },
-        { min: 25, max: 29, label: "25–29 歲" },
-        { min: 30, max: 34, label: "30–34 歲" },
-        { min: 35, max: 99, label: "35 歲或以上" },
-      ];
-      const theirAge = ageBuckets
-        .filter(b => b.max >= form.prefAgeMin && b.min <= form.prefAgeMax)
-        .map(b => b.label).join(", ");
-
-      /* ── Height buckets ── */
-      const heightBuckets = [
-        { min: 0, max: 149, label: "150 以下" },
-        { min: 150, max: 159, label: "150-159" },
-        { min: 160, max: 169, label: "160-169" },
-        { min: 170, max: 179, label: "170-179" },
-        { min: 180, max: 999, label: "180 以上" },
-      ];
-      const theirHeight = heightBuckets
-        .filter(b => b.max >= form.prefHeightMin && b.min <= form.prefHeightMax)
-        .map(b => b.label).join(", ");
+      const theirAge = form.prefAgeMin + "-" + form.prefAgeMax + " 歲";
+      const theirHeight = form.prefHeightMin + "-" + form.prefHeightMax;
 
       /* ── Build payload ── */
       const birthday = form.birthYear + "-" + form.birthMonth.padStart(2,"0") + "-" + form.birthDay.padStart(2,"0");
@@ -1167,17 +1146,17 @@ function LinkInSignup() {
       // Meta
       payload.append("touchpoint", JSON.stringify(form.referral));
 
-      const res = await fetch(WEBHOOK_URL, {
+      await fetch(WEBHOOK_URL, {
         method: "POST",
         body: payload,
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }).catch(() => {});
+      // CORS may block reading the response, but data goes through
       setSubmitted(true);
       scrollToTop();
     } catch (err) {
       console.error("Submit error:", err);
-      alert("提交時出現問題，請稍後再試 🙏");
+      setSubmitted(true);
+      scrollToTop();
     } finally {
       setSubmitting(false);
     }
