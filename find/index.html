@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Link.in — 搵你嘅理想對象</title>
+  <meta name="description" content="話俾我哋知你想搵咩樣嘅人，我哋幫你配對 ✨">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+</head>
+<body style="margin:0">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef } = React;
+
+/* ═══════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════ */
+const WEBHOOK_URL = "https://linkinhk.app.n8n.cloud/webhook/find";
+const NEXT_PAGE_URL = "/potential-match";
+const LOGO_URL = "/logo.png";
+const STORAGE_KEY = "linkin_part1_data";
+
+/* ═══════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════ */
+const OCCUPATIONS = [
+  { id: "finance", label: "金融／銀行", icon: "🏦" },
+  { id: "business", label: "商業／市場", icon: "📊" },
+  { id: "it", label: "IT／科技", icon: "👨‍💻" },
+  { id: "design", label: "設計／創意", icon: "🎨" },
+  { id: "education", label: "教育", icon: "📚" },
+  { id: "medical", label: "醫療", icon: "🏥" },
+  { id: "engineering", label: "工程", icon: "🏗" },
+  { id: "legal", label: "法律／會計", icon: "⚖️" },
+  { id: "service", label: "服務業", icon: "🍽" },
+  { id: "freelance", label: "自僱／創業", icon: "✨" },
+  { id: "student", label: "學生", icon: "🎓" },
+];
+
+const CRITERIA_CHIPS = {
+  "外表": ["瘦", "肌肉", "可愛", "靚仔／靚女", "有型"],
+  "性格": ["開朗", "內斂", "幽默", "成熟", "溫柔", "有自信", "細心"],
+  "生活方式": ["愛運動", "愛旅行", "愛美食", "宅", "有寵物"],
+  "價值觀": ["顧家", "上進"],
+};
+
+const STEPS = [
+  { title: "你想搵⋯⋯", subtitle: "讓我哋了解你嘅理想對象 ✨" },
+  { title: "年齡同身高", subtitle: "你心目中嘅範圍 📏" },
+  { title: "職業背景", subtitle: "想認識邊個行業嘅人？💼" },
+  { title: "佢應該係點樣？", subtitle: "揀最多 5 個你最重視嘅特質 ✨" },
+  { title: "仲有冇其他想講？", subtitle: "用文字話我哋聽 💬" },
+];
+
+/* ═══════════════════════════════════════════
+   STYLES
+   ═══════════════════════════════════════════ */
+const STYLES = `
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg: #f0f0f0;
+    --card: #f7f7f7;
+    --white: #ffffff;
+    --text: #333;
+    --text-light: #888;
+    --accent: #9060E0;
+    --accent-pink: #FF6EB4;
+    --accent-gradient: linear-gradient(135deg, #FF6EB4, #A259FF);
+    --chip-bg: #efefef;
+    --green-bg: #e8f8ee;
+    --green-text: #1a7a3a;
+    --yellow-bg: #fefce8;
+    --yellow-border: #eab308;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .form-root {
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px 48px;
+  }
+  .form-card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+  }
+  .form-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent-gradient);
+    z-index: 1;
+  }
+
+  .form-header {
+    padding: 28px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo-img { height: 20px; opacity: 0.8; }
+  .step-indicator {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-light);
+    letter-spacing: 0.5px;
+  }
+
+  .progress-bar {
+    margin: 16px 24px 0;
+    height: 4px;
+    background: var(--chip-bg);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent-gradient);
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .step-header { padding: 24px 24px 4px; }
+  .step-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .step-subtitle { font-size: 14px; color: var(--text-light); }
+  .step-body { padding: 16px 24px 24px; }
+
+  .field { margin-bottom: 32px; }
+  .field-label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .field-hint { font-size: 12px; color: var(--text-light); margin-bottom: 8px; line-height: 1.5; }
+
+  .text-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--white);
+    color: var(--text);
+    transition: border-color 0.2s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .text-input:focus { border-color: var(--accent); }
+  .text-input::placeholder { color: #ccc; }
+  textarea.text-input { resize: vertical; min-height: 120px; }
+
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 24px;
+    border: 2px solid transparent;
+    background: var(--chip-bg);
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip:active { transform: scale(0.96); }
+  .chip.active {
+    background: #f0e8fc;
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .chip .chip-icon { font-size: 16px; }
+
+  .binary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .binary-btn {
+    padding: 24px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid #e0e0e0;
+    background: var(--white);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #555;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .binary-btn:active { transform: scale(0.97); }
+  .binary-btn.active {
+    border-color: var(--accent);
+    background: #f0e8fc;
+    color: var(--accent);
+  }
+  .binary-btn .binary-icon { font-size: 36px; }
+
+  /* Range inputs */
+  .range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .range-input-group { flex: 1; }
+  .range-input-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 4px;
+  }
+  .range-input-box {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e0e0e0;
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    padding: 8px 12px;
+    transition: border-color 0.2s;
+  }
+  .range-input-box:focus-within { border-color: var(--accent); }
+  .range-input {
+    border: none;
+    outline: none;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--text);
+    width: 100%;
+    background: transparent;
+    -webkit-appearance: none;
+  }
+  .range-input-unit {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+  .range-input-dash {
+    color: #ccc;
+    font-size: 14px;
+    margin-top: 18px;
+    flex-shrink: 0;
+  }
+
+  /* Criteria categories */
+  .criteria-cat { margin-bottom: 16px; }
+  .criteria-cat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 8px;
+  }
+  .criteria-count {
+    display: inline-block;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .criteria-count.ok { background: var(--green-bg); color: var(--green-text); }
+  .criteria-count.warn { background: #fff0f0; color: #c00; }
+
+  .nav-row { padding: 8px 24px 28px; display: flex; gap: 10px; }
+  .nav-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-btn.secondary { background: var(--chip-bg); color: #666; }
+  .nav-btn.secondary:hover { background: #e0e0e0; }
+  .nav-btn.primary {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 4px 16px rgba(144, 96, 224, 0.3);
+  }
+  .nav-btn.primary:hover {
+    box-shadow: 0 6px 20px rgba(144, 96, 224, 0.4);
+    transform: translateY(-1px);
+  }
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .field-error { font-size: 12px; color: #e53e3e; margin-top: 6px; }
+  .section-divider { height: 1px; background: #e8e8e8; margin: 4px 0 22px; }
+  .step-content { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .submitting-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(247,247,247,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 10;
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 4px solid var(--chip-bg);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-title { font-size: 16px; font-weight: 600; color: #444; }
+  .loading-hint { font-size: 13px; color: #999; margin-top: 4px; }
+
+  @media (max-width: 500px) {
+    .form-root { padding: 12px 8px 40px; }
+    .form-card { border-radius: 16px; }
+    .step-body { padding: 16px 20px 20px; }
+    .nav-row { padding: 8px 20px 24px; }
+    .form-header { padding: 24px 20px 0; }
+    .progress-bar { margin: 14px 20px 0; }
+    .step-header { padding: 20px 20px 4px; }
+    .step-title { font-size: 20px; }
+  }
+`;
+
+/* ═══════════════════════════════════════════
+   COMPONENT
+   ═══════════════════════════════════════════ */
+function FindForm() {
+  const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+  const cardRef = useRef(null);
+
+  // Try to load existing data from localStorage on mount
+  const loadSaved = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return null;
+  };
+  const savedData = loadSaved();
+
+  const [form, setForm] = useState(savedData || {
+    targetGender: "",
+    ageMin: 18, ageMax: 60,
+    heightMin: 140, heightMax: 200,
+    occupations: [],
+    criteria: [],
+    freeText: "",
+  });
+
+  // edit states for range inputs
+  const [editAgeMin, setEditAgeMin] = useState(null);
+  const [editAgeMax, setEditAgeMax] = useState(null);
+  const [editHeightMin, setEditHeightMin] = useState(null);
+  const [editHeightMax, setEditHeightMax] = useState(null);
+
+  const set = (key, val) => {
+    setForm(prev => ({ ...prev, [key]: val }));
+    setErrors(prev => ({ ...prev, [key]: undefined }));
+  };
+
+  const toggleArray = (key, val, max) => {
+    setForm(prev => {
+      const arr = prev[key];
+      if (arr.includes(val)) return { ...prev, [key]: arr.filter(v => v !== val) };
+      if (max && arr.length >= max) return prev;
+      return { ...prev, [key]: [...arr, val] };
+    });
+    setErrors(prev => ({ ...prev, [key]: undefined }));
+  };
+
+  const validateStep = () => {
+    const e = {};
+    if (step === 0) {
+      if (!form.targetGender) e.targetGender = "請揀一個";
+    } else if (step === 1) {
+      if (!form.ageMin || !form.ageMax) e.age = "請輸入年齡範圍";
+      else if (form.ageMin >= form.ageMax) e.age = "最低年齡要細過最高年齡";
+      if (!form.heightMin || !form.heightMax) e.height = "請輸入身高範圍";
+      else if (form.heightMin >= form.heightMax) e.height = "最低身高要細過最高身高";
+    } else if (step === 2) {
+      if (form.occupations.length === 0) e.occupations = "請至少揀一個（或揀無所謂）";
+    } else if (step === 3) {
+      // criteria optional but max 5
+      if (form.criteria.length > 5) e.criteria = "最多揀 5 個";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const next = () => {
+    if (!validateStep()) return;
+    if (step < STEPS.length - 1) {
+      setStep(s => s + 1);
+      scrollToTop();
+    }
+  };
+  const prev = () => {
+    if (step > 0) { setStep(s => s - 1); scrollToTop(); }
+  };
+
+  const submit = async () => {
+    if (!validateStep()) return;
+    setSubmitting(true);
+    try {
+      // Save to localStorage immediately so Part 3 can pick it up later
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+
+      const res = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const matches = await res.json().catch(() => ({ matches: [] }));
+        // Save matches to localStorage so Part 2 can read them
+        localStorage.setItem("linkin_part2_matches", JSON.stringify(matches));
+        window.location.href = NEXT_PAGE_URL;
+      } else {
+        alert("提交失敗，請稍後再試 🙏");
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+      if (err.name === "AbortError") {
+        alert("提交超時，請檢查網絡後再試 🙏");
+      } else {
+        alert("提交失敗，請檢查網絡後再試 🙏");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const ErrorMsg = ({ field }) => errors[field] ? <div className="field-error">{errors[field]}</div> : null;
+
+  /* ── Step renderers ── */
+
+  const renderStep0 = () => (
+    <div className="step-content">
+      <div className="field">
+        <div className="field-label">你想搵⋯⋯</div>
+        <div className="binary-row">
+          <div className={`binary-btn ${form.targetGender === "F" ? "active" : ""}`} onClick={() => set("targetGender", "F")}>
+            <span className="binary-icon">👩</span>
+            女生
+          </div>
+          <div className={`binary-btn ${form.targetGender === "M" ? "active" : ""}`} onClick={() => set("targetGender", "M")}>
+            <span className="binary-icon">👨</span>
+            男生
+          </div>
+        </div>
+        <ErrorMsg field="targetGender" />
+      </div>
+    </div>
+  );
+
+  const renderStep1 = () => (
+    <div className="step-content">
+      <div className="field">
+        <div className="field-label">年齡範圍</div>
+        <div className="range-inputs">
+          <div className="range-input-group">
+            <div className="range-input-label">最低</div>
+            <div className="range-input-box">
+              <input
+                type="text" inputMode="numeric" className="range-input"
+                value={editAgeMin !== null ? editAgeMin : form.ageMin}
+                onFocus={e => { setEditAgeMin(String(form.ageMin)); e.target.select(); }}
+                onChange={e => setEditAgeMin(e.target.value)}
+                onBlur={() => {
+                  const n = parseInt(editAgeMin);
+                  if (!isNaN(n) && n > 0) set("ageMin", n);
+                  setEditAgeMin(null);
+                }}
+              />
+              <span className="range-input-unit">歲</span>
+            </div>
+          </div>
+          <div className="range-input-dash">—</div>
+          <div className="range-input-group">
+            <div className="range-input-label">最高</div>
+            <div className="range-input-box">
+              <input
+                type="text" inputMode="numeric" className="range-input"
+                value={editAgeMax !== null ? editAgeMax : form.ageMax}
+                onFocus={e => { setEditAgeMax(String(form.ageMax)); e.target.select(); }}
+                onChange={e => setEditAgeMax(e.target.value)}
+                onBlur={() => {
+                  const n = parseInt(editAgeMax);
+                  if (!isNaN(n) && n > 0) set("ageMax", n);
+                  setEditAgeMax(null);
+                }}
+              />
+              <span className="range-input-unit">歲</span>
+            </div>
+          </div>
+        </div>
+        <ErrorMsg field="age" />
+      </div>
+
+      <div className="field">
+        <div className="field-label">身高範圍</div>
+        <div className="range-inputs">
+          <div className="range-input-group">
+            <div className="range-input-label">最低</div>
+            <div className="range-input-box">
+              <input
+                type="text" inputMode="numeric" className="range-input"
+                value={editHeightMin !== null ? editHeightMin : form.heightMin}
+                onFocus={e => { setEditHeightMin(String(form.heightMin)); e.target.select(); }}
+                onChange={e => setEditHeightMin(e.target.value)}
+                onBlur={() => {
+                  const n = parseInt(editHeightMin);
+                  if (!isNaN(n) && n > 0) set("heightMin", n);
+                  setEditHeightMin(null);
+                }}
+              />
+              <span className="range-input-unit">cm</span>
+            </div>
+          </div>
+          <div className="range-input-dash">—</div>
+          <div className="range-input-group">
+            <div className="range-input-label">最高</div>
+            <div className="range-input-box">
+              <input
+                type="text" inputMode="numeric" className="range-input"
+                value={editHeightMax !== null ? editHeightMax : form.heightMax}
+                onFocus={e => { setEditHeightMax(String(form.heightMax)); e.target.select(); }}
+                onChange={e => setEditHeightMax(e.target.value)}
+                onBlur={() => {
+                  const n = parseInt(editHeightMax);
+                  if (!isNaN(n) && n > 0) set("heightMax", n);
+                  setEditHeightMax(null);
+                }}
+              />
+              <span className="range-input-unit">cm</span>
+            </div>
+          </div>
+        </div>
+        <ErrorMsg field="height" />
+      </div>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="step-content">
+      <div className="field">
+        <div className="field-label">想認識邊個行業嘅人？（可多選）</div>
+        <div className="field-hint">揀「無所謂」就唔會限制行業</div>
+        <div className="chip-grid">
+          <div
+            className={`chip ${form.occupations.includes("無所謂") ? "active" : ""}`}
+            onClick={() => {
+              if (form.occupations.includes("無所謂")) {
+                set("occupations", []);
+              } else {
+                set("occupations", ["無所謂"]);
+              }
+            }}
+          >
+            無所謂
+          </div>
+          {OCCUPATIONS.map(o => (
+            <div
+              key={o.id}
+              className={`chip ${form.occupations.includes(o.id) ? "active" : ""}`}
+              onClick={() => {
+                const without = form.occupations.filter(v => v !== "無所謂");
+                if (without.includes(o.id)) {
+                  set("occupations", without.filter(v => v !== o.id));
+                } else {
+                  set("occupations", [...without, o.id]);
+                }
+              }}
+            >
+              <span className="chip-icon">{o.icon}</span>
+              {o.label}
+            </div>
+          ))}
+        </div>
+        <ErrorMsg field="occupations" />
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => {
+    const count = form.criteria.length;
+    const countClass = count > 0 && count <= 5 ? "ok" : count > 5 ? "warn" : "";
+    return (
+      <div className="step-content">
+        <div className="field">
+          <div className="field-label">揀最多 5 個你最重視嘅特質</div>
+          <div className={`criteria-count ${countClass}`}>已選 {count} / 5</div>
+          {Object.entries(CRITERIA_CHIPS).map(([cat, items]) => (
+            <div className="criteria-cat" key={cat}>
+              <div className="criteria-cat-label">{cat}</div>
+              <div className="chip-grid">
+                {items.map(label => (
+                  <div
+                    key={label}
+                    className={`chip ${form.criteria.includes(label) ? "active" : ""}`}
+                    onClick={() => toggleArray("criteria", label, 5)}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <ErrorMsg field="criteria" />
+        </div>
+      </div>
+    );
+  };
+
+  const renderStep4 = () => (
+    <div className="step-content">
+      <div className="field">
+        <div className="field-label">用文字話我哋聽你想搵咩樣嘅人（可選填）</div>
+        <div className="field-hint">越具體越好，例如：希望對方鍾意行山、有時間陪我食飯</div>
+        <textarea
+          className="text-input"
+          placeholder="寫低你心目中嘅理想對象⋯⋯"
+          value={form.freeText}
+          onChange={e => set("freeText", e.target.value)}
+          maxLength={200}
+        />
+        <div style={{ textAlign: "right", fontSize: 12, color: "#bbb", marginTop: 4 }}>{form.freeText.length} / 200</div>
+      </div>
+    </div>
+  );
+
+  const stepRenderers = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4];
+
+  return (
+    <>
+      <style>{STYLES}</style>
+      <div className="form-root">
+        <div className="form-card" ref={cardRef}>
+          {submitting && (
+            <div className="submitting-overlay">
+              <div className="spinner" />
+              <div className="loading-title">請等等！我哋搵緊適合你嘅人 ✨</div>
+              <div className="loading-hint">通常需要 10 秒左右，請稍等 🙏</div>
+            </div>
+          )}
+
+          <div className="form-header">
+            <img src={LOGO_URL} alt="Link.in" className="logo-img" />
+            <div className="step-indicator">{step + 1} / {STEPS.length}</div>
+          </div>
+
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} />
+          </div>
+
+          <div className="step-header">
+            <div className="step-title">{STEPS[step].title}</div>
+            <div className="step-subtitle">{STEPS[step].subtitle}</div>
+          </div>
+
+          <div className="step-body">
+            {stepRenderers[step]()}
+          </div>
+
+          <div className="nav-row">
+            {step > 0 && <button className="nav-btn secondary" onClick={prev}>返回</button>}
+            {step < STEPS.length - 1 ? (
+              <button className="nav-btn primary" onClick={next}>繼續</button>
+            ) : (
+              <button className="nav-btn primary" onClick={submit} disabled={submitting}>
+                {submitting ? "搵緊⋯⋯" : "幫我配對 ✨"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<FindForm />);
+  </script>
+</body>
+</html>
