@@ -83,10 +83,10 @@
             const data = await res.json();
 
             if (data.success && data.email) {
-              // Session valid — go straight to logged in
+              // Session valid — go straight to dashboard
               localStorage.setItem("linkinhk_email", data.email);
-              setLoggedInEmail(data.email);
-              setScreen("loggedIn");
+              window.location.href = "/dashboard";
+              return;
             } else {
               // Session invalid — clear and show login
               localStorage.removeItem("linkinhk_token");
@@ -176,9 +176,9 @@
           if (data.success && data.token) {
             localStorage.setItem("linkinhk_token", data.token);
             localStorage.setItem("linkinhk_email", data.email);
-            setLoggedInEmail(data.email);
-            setStatus("idle");
-            setScreen("loggedIn");
+            // Redirect to dashboard
+            window.location.href = "/dashboard";
+            return;
           } else {
             setErrorMsg(data.error || "驗證失敗,請再試");
             setStatus("error");
