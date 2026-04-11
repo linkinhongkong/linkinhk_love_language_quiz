@@ -166,7 +166,7 @@ function TextField({ label, value, onChange, disabled, placeholder }) {
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         placeholder={placeholder}
-        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition disabled:bg-stone-50 disabled:text-stone-400"
+        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition disabled:bg-stone-50 disabled:text-stone-400"
       />
     </div>
   );
@@ -182,7 +182,7 @@ function TextAreaField({ label, value, onChange, rows = 4, placeholder }) {
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
         placeholder={placeholder}
-        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition resize-none"
+        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition resize-none"
       />
     </div>
   );
@@ -200,7 +200,7 @@ function NumberField({ label, value, onChange, min, max, unit }) {
           onChange={(e) => onChange(e.target.value)}
           min={min}
           max={max}
-          className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+          className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
         />
         {unit && (
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">
@@ -243,7 +243,7 @@ function DateField({ label, value, onChange }) {
         type="date"
         value={toInputFormat(value)}
         onChange={(e) => onChange(toStorageFormat(e.target.value))}
-        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
       />
     </div>
   );
@@ -264,10 +264,10 @@ function SelectChips({ label, options, value, onChange }) {
               key={i}
               type="button"
               onClick={() => onChange(stored)}
-              className={`px-3 py-2 rounded-full border text-sm transition ${
+              className={`px-4 py-2 rounded-full text-sm transition border-2 ${
                 selected
-                  ? "bg-stone-900 text-white border-stone-900"
-                  : "bg-white text-stone-700 border-stone-300 hover:border-stone-400"
+                  ? "border-purple-400 bg-purple-50 text-purple-700"
+                  : "border-transparent bg-stone-100 text-stone-700 hover:bg-stone-200"
               }`}
             >
               {opt.icon && <span className="mr-1">{opt.icon}</span>}
@@ -314,10 +314,10 @@ function MultiSelectChips({ label, groups, value, onChange, supportOther, otherV
                   key={i}
                   type="button"
                   onClick={() => toggle(opt)}
-                  className={`px-3 py-1.5 rounded-full border text-sm transition ${
+                  className={`px-4 py-2 rounded-full text-sm transition border-2 ${
                     selected
-                      ? "bg-stone-900 text-white border-stone-900"
-                      : "bg-white text-stone-700 border-stone-300 hover:border-stone-400"
+                      ? "border-purple-400 bg-purple-50 text-purple-700"
+                      : "border-transparent bg-stone-100 text-stone-700 hover:bg-stone-200"
                   }`}
                 >
                   {opt.icon && <span className="mr-1">{opt.icon}</span>}
@@ -336,7 +336,7 @@ function MultiSelectChips({ label, groups, value, onChange, supportOther, otherV
             value={otherValue || ""}
             onChange={(e) => onOtherChange(e.target.value)}
             placeholder="自己加入..."
-            className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+            className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
           />
         </div>
       )}
@@ -485,7 +485,10 @@ function BottomSheet({ open, title, fields, profile, onClose, onSaved }) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 rounded-lg transition disabled:opacity-60"
+            className="w-full text-white font-medium py-3 rounded-full transition disabled:opacity-60"
+            style={{
+              background: "linear-gradient(to right, #FF6EB4, #A259FF)"
+            }}
           >
             {saving ? "保存中..." : "保存"}
           </button>
