@@ -214,26 +214,19 @@ function NumberField({ label, value, onChange, min, max, unit }) {
 
 // ---------------- Form input: date ----------------
 function DateField({ label, value, onChange }) {
-  // Convert various date formats from DB to yyyy-mm-dd for input[type=date]
+  // Airtable Date columns need ISO format (yyyy-mm-dd).
+  // Existing legacy data may be in d/m/yyyy format — handle both for display.
   const toInputFormat = (raw) => {
     if (!raw) return "";
-    // Already yyyy-mm-dd
-    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-    // d/m/yyyy or dd/mm/yyyy
+    // Already yyyy-mm-dd or ISO datetime
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.substring(0, 10);
+    // d/m/yyyy or dd/mm/yyyy (legacy format)
     const m = String(raw).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (m) {
       const [, d, mo, y] = m;
       return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
     }
     return "";
-  };
-  // Convert back to d/m/yyyy for storage (matches existing DB format)
-  const toStorageFormat = (iso) => {
-    if (!iso) return "";
-    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) return iso;
-    const [, y, mo, d] = m;
-    return `${parseInt(d)}/${parseInt(mo)}/${y}`;
   };
 
   return (
@@ -242,7 +235,7 @@ function DateField({ label, value, onChange }) {
       <input
         type="date"
         value={toInputFormat(value)}
-        onChange={(e) => onChange(toStorageFormat(e.target.value))}
+        onChange={(e) => onChange(e.target.value)}
         className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
       />
     </div>
@@ -250,20 +243,45 @@ function DateField({ label, value, onChange }) {
 }
 
 // ---------------- Form input: single-select chips ----------------
+// Supports "其他/其它" — when that option is picked, a text input appears
+// and the typed text becomes the stored value directly.
 function SelectChips({ label, options, value, onChange }) {
-  // value is the stored string (e.g. "🏦金融／銀行")
+  // Detect if current value matches a preset option, or is custom (= "其它" was used)
+  const presetMatch = options.find(opt => optionToStored(opt) === String(value || ""));
+  const otherOption = options.find(opt => opt.label === "其他" || opt.label === "其它");
+  const isCustom = !presetMatch && value && otherOption;
+
+  // Track whether "其它" chip should appear selected
+  const [otherActive, setOtherActive] = useState(isCustom);
+
+  useEffect(() => {
+    setOtherActive(isCustom);
+  }, [value]);
+
+  const handleClick = (opt) => {
+    if (opt.label === "其他" || opt.label === "其它") {
+      setOtherActive(true);
+      // Don't clear value if already custom — let user keep editing
+      if (!isCustom) onChange("");
+    } else {
+      setOtherActive(false);
+      onChange(optionToStored(opt));
+    }
+  };
+
   return (
     <div className="mb-4">
       <label className="block text-xs text-stone-500 mb-2">{label}</label>
       <div className="flex flex-wrap gap-2">
         {options.map((opt, i) => {
           const stored = optionToStored(opt);
-          const selected = value === stored;
+          const isOther = opt.label === "其他" || opt.label === "其它";
+          const selected = isOther ? otherActive : (value === stored && !otherActive);
           return (
             <button
               key={i}
               type="button"
-              onClick={() => onChange(stored)}
+              onClick={() => handleClick(opt)}
               className={`px-4 py-2 rounded-full text-sm transition border-2 ${
                 selected
                   ? "border-purple-400 bg-purple-50 text-purple-700"
@@ -276,6 +294,15 @@ function SelectChips({ label, options, value, onChange }) {
           );
         })}
       </div>
+      {otherActive && (
+        <input
+          type="text"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="請輸入..."
+          className="mt-3 w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
+        />
+      )}
     </div>
   );
 }
