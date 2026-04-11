@@ -89,6 +89,7 @@ function Dashboard() {
             subTab={profileSubTab}
             setSubTab={setProfileSubTab}
             onLogout={handleLogout}
+            onProfileUpdated={(newProfile) => setProfile(newProfile)}
           />
         )}
       </main>
