@@ -41,7 +41,7 @@ const PROFILE_CARD_CONFIGS = {
     title: "編輯 🧠 個性 & 相處",
     fields: [
       { key: "my-MBTI", label: "MBTI", type: "select", options: OPTIONS.mbti },
-      { key: "my-love-language", label: "愛的語言", type: "select", options: OPTIONS.loveLanguage },
+      { key: "my-love-language", label: "愛的語言", type: "rank", options: OPTIONS.loveLanguage },
     ]
   },
   lifestyle: {
