@@ -7,50 +7,55 @@ const PROFILE_CARD_CONFIGS = {
   summary: {
     title: "編輯個人簡介",
     fields: [
-      { key: "my-photo-1", label: "相片 1 (URL)" },
-      { key: "my-photo-2", label: "相片 2 (URL)" },
-      { key: "my-photo-3", label: "相片 3 (URL)" },
       { key: "name", label: "姓名" },
-      { key: "my-age", label: "出生日期" },
-      { key: "my-occupation", label: "職業" },
+      { key: "my-age", label: "出生日期", type: "date" },
+      { key: "my-occupation", label: "職業", type: "select", options: OPTIONS.occupation },
     ]
   },
   about: {
     title: "編輯 ✨ 讓人更了解你",
     fields: [
-      { key: "my-bio", label: "自我介紹", type: "textarea" },
-      { key: "my-activities", label: "想一齊做嘅活動 (用逗號分隔)" },
-      { key: "my-hobby", label: "興趣 (用逗號分隔)" },
+      { key: "my-bio", label: "自我介紹", type: "textarea", placeholder: "講少少關於你..." },
+      {
+        key: "my-activities",
+        label: "想一齊做嘅活動",
+        type: "multiselect",
+        groups: ACTIVITY_GROUPS,
+        supportOther: true,
+        otherKey: "my-activities-others",
+        otherLabel: "其他想法"
+      },
+      { key: "my-hobby", label: "興趣", type: "multiselect", groups: HOBBY_GROUPS },
     ]
   },
   basic: {
     title: "編輯 📌 基本資料",
     fields: [
-      { key: "sex", label: "性別" },
-      { key: "my-height", label: "身高 (cm)" },
-      { key: "my-uni", label: "大學" },
+      { key: "sex", label: "性別", type: "select", options: OPTIONS.sex },
+      { key: "my-height", label: "身高", type: "number", unit: "cm", min: 100, max: 250 },
+      { key: "my-uni", label: "大學", type: "select", options: OPTIONS.university },
       { key: "instagram", label: "Instagram" },
     ]
   },
   personality: {
     title: "編輯 🧠 個性 & 相處",
     fields: [
-      { key: "my-MBTI", label: "MBTI" },
-      { key: "my-love-language", label: "愛的語言" },
+      { key: "my-MBTI", label: "MBTI", type: "select", options: OPTIONS.mbti },
+      { key: "my-love-language", label: "愛的語言", type: "select", options: OPTIONS.loveLanguage },
     ]
   },
   lifestyle: {
     title: "編輯 🌿 生活習慣",
     fields: [
-      { key: "my-drinking-habbit", label: "飲酒習慣" },
-      { key: "my-smoking-habbit", label: "吸煙習慣" },
+      { key: "my-drinking-habbit", label: "飲酒習慣", type: "select", options: OPTIONS.drinking },
+      { key: "my-smoking-habbit", label: "吸煙習慣", type: "select", options: OPTIONS.smoking },
     ]
   },
   relationship: {
     title: "編輯 💛 關係觀",
     fields: [
-      { key: "my-kids-expectation", label: "對小朋友的想法" },
-      { key: "my-religion", label: "宗教" },
+      { key: "my-kids-expectation", label: "對小朋友的想法", type: "select", options: OPTIONS.kids },
+      { key: "my-religion", label: "宗教", type: "select", options: OPTIONS.religion },
     ]
   },
   account: {
@@ -78,7 +83,7 @@ function PhotoCell({ url, alt, className = "" }) {
 }
 
 // ---------------- Who I Am ----------------
-function WhoIAm({ profile }) {
+function WhoIAm({ profile, onProfileUpdated }) {
   const [editingCard, setEditingCard] = useState(null);
 
   const photos = [
@@ -185,6 +190,7 @@ function WhoIAm({ profile }) {
           fields={PROFILE_CARD_CONFIGS[editingCard].fields}
           profile={profile}
           onClose={closeSheet}
+          onSaved={onProfileUpdated}
         />
       )}
     </div>
