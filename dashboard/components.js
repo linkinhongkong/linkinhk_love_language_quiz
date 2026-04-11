@@ -155,9 +155,200 @@ function WantField({ label, value, fieldKey, dealBreakers, hideToggle = false, c
   );
 }
 
+// ---------------- Form input: text ----------------
+function TextField({ label, value, onChange, disabled, placeholder }) {
+  return (
+    <div className="mb-4">
+      <label className="block text-xs text-stone-500 mb-1.5">{label}</label>
+      <input
+        type="text"
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition disabled:bg-stone-50 disabled:text-stone-400"
+      />
+    </div>
+  );
+}
+
+// ---------------- Form input: textarea ----------------
+function TextAreaField({ label, value, onChange, rows = 4, placeholder }) {
+  return (
+    <div className="mb-4">
+      <label className="block text-xs text-stone-500 mb-1.5">{label}</label>
+      <textarea
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition resize-none"
+      />
+    </div>
+  );
+}
+
+// ---------------- Form input: number ----------------
+function NumberField({ label, value, onChange, min, max, unit }) {
+  return (
+    <div className="mb-4">
+      <label className="block text-xs text-stone-500 mb-1.5">{label}</label>
+      <div className="relative">
+        <input
+          type="number"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          min={min}
+          max={max}
+          className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+        />
+        {unit && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">
+            {unit}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------- Form input: date ----------------
+function DateField({ label, value, onChange }) {
+  // Convert various date formats from DB to yyyy-mm-dd for input[type=date]
+  const toInputFormat = (raw) => {
+    if (!raw) return "";
+    // Already yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    // d/m/yyyy or dd/mm/yyyy
+    const m = String(raw).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) {
+      const [, d, mo, y] = m;
+      return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    }
+    return "";
+  };
+  // Convert back to d/m/yyyy for storage (matches existing DB format)
+  const toStorageFormat = (iso) => {
+    if (!iso) return "";
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return iso;
+    const [, y, mo, d] = m;
+    return `${parseInt(d)}/${parseInt(mo)}/${y}`;
+  };
+
+  return (
+    <div className="mb-4">
+      <label className="block text-xs text-stone-500 mb-1.5">{label}</label>
+      <input
+        type="date"
+        value={toInputFormat(value)}
+        onChange={(e) => onChange(toStorageFormat(e.target.value))}
+        className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+      />
+    </div>
+  );
+}
+
+// ---------------- Form input: single-select chips ----------------
+function SelectChips({ label, options, value, onChange }) {
+  // value is the stored string (e.g. "🏦金融／銀行")
+  return (
+    <div className="mb-4">
+      <label className="block text-xs text-stone-500 mb-2">{label}</label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt, i) => {
+          const stored = optionToStored(opt);
+          const selected = value === stored;
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onChange(stored)}
+              className={`px-3 py-2 rounded-full border text-sm transition ${
+                selected
+                  ? "bg-stone-900 text-white border-stone-900"
+                  : "bg-white text-stone-700 border-stone-300 hover:border-stone-400"
+              }`}
+            >
+              {opt.icon && <span className="mr-1">{opt.icon}</span>}
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------- Form input: multi-select grouped chips ----------------
+function MultiSelectChips({ label, groups, value, onChange, supportOther, otherValue, onOtherChange, otherLabel = "其他" }) {
+  // value is the stored CSV string (e.g. "📖閱讀, 🎮打機")
+  // Convert to a Set of stored strings for fast lookup
+  const selectedSet = new Set(
+    String(value || "").split(",").map(s => s.trim()).filter(Boolean)
+  );
+
+  const toggle = (opt) => {
+    const stored = optionToStored(opt);
+    const newSet = new Set(selectedSet);
+    if (newSet.has(stored)) {
+      newSet.delete(stored);
+    } else {
+      newSet.add(stored);
+    }
+    onChange(Array.from(newSet).join(", "));
+  };
+
+  return (
+    <div className="mb-4">
+      <label className="block text-xs text-stone-500 mb-2">{label}</label>
+      {Object.entries(groups).map(([groupName, options]) => (
+        <div key={groupName} className="mb-3">
+          <div className="text-[11px] font-medium text-stone-400 mb-1.5">{groupName}</div>
+          <div className="flex flex-wrap gap-2">
+            {options.map((opt, i) => {
+              const stored = optionToStored(opt);
+              const selected = selectedSet.has(stored);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => toggle(opt)}
+                  className={`px-3 py-1.5 rounded-full border text-sm transition ${
+                    selected
+                      ? "bg-stone-900 text-white border-stone-900"
+                      : "bg-white text-stone-700 border-stone-300 hover:border-stone-400"
+                  }`}
+                >
+                  {opt.icon && <span className="mr-1">{opt.icon}</span>}
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {supportOther && (
+        <div className="mt-3">
+          <label className="block text-[11px] text-stone-400 mb-1">{otherLabel}</label>
+          <input
+            type="text"
+            value={otherValue || ""}
+            onChange={(e) => onOtherChange(e.target.value)}
+            placeholder="自己加入..."
+            className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---------------- Bottom Sheet ----------------
-function BottomSheet({ open, title, fields, profile, onClose }) {
+function BottomSheet({ open, title, fields, profile, onClose, onSaved }) {
   const [values, setValues] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (open) {
@@ -166,6 +357,8 @@ function BottomSheet({ open, title, fields, profile, onClose }) {
         initial[f.key] = profile[f.key] || "";
       });
       setValues(initial);
+      setError(null);
+      setSaving(false);
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -175,63 +368,126 @@ function BottomSheet({ open, title, fields, profile, onClose }) {
 
   if (!open) return null;
 
-  const handleChange = (key, val) => {
+  const setVal = (key, val) => {
     setValues(prev => ({ ...prev, [key]: val }));
   };
 
-  const handleSave = () => {
-    // No-op for now — write workflow comes next iteration
-    onClose();
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+
+    // Build updates object — only include fields that aren't read-only
+    const updates = {};
+    fields.forEach(f => {
+      if (!f.readOnly) {
+        updates[f.key] = values[f.key] || "";
+      }
+    });
+
+    try {
+      const res = await authenticatedFetch(
+        "https://linkinhk.app.n8n.cloud/webhook/update-profile",
+        {
+          method: "POST",
+          body: JSON.stringify({ updates })
+        }
+      );
+      const data = await res.json();
+      if (data.success && data.profile) {
+        if (onSaved) onSaved(data.profile);
+        onClose();
+      } else {
+        setError(data.error || "保存失敗,請再試");
+        setSaving(false);
+      }
+    } catch (err) {
+      if (err.message !== "Unauthorized" && err.message !== "No token") {
+        setError("網絡連線錯誤");
+        setSaving(false);
+      }
+    }
+  };
+
+  // Render the right input component based on field.type
+  const renderField = (f) => {
+    const val = values[f.key];
+    const onChange = (newVal) => setVal(f.key, newVal);
+
+    if (f.readOnly) {
+      return (
+        <div key={f.key} className="mb-4">
+          <label className="block text-xs text-stone-500 mb-1.5">
+            {f.label}
+            <span className="ml-2 text-stone-400">(不可修改)</span>
+          </label>
+          <input
+            type="text"
+            value={val || ""}
+            disabled
+            className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-stone-50 text-stone-400"
+          />
+        </div>
+      );
+    }
+
+    switch (f.type) {
+      case "textarea":
+        return <TextAreaField key={f.key} label={f.label} value={val} onChange={onChange} placeholder={f.placeholder} />;
+      case "number":
+        return <NumberField key={f.key} label={f.label} value={val} onChange={onChange} unit={f.unit} min={f.min} max={f.max} />;
+      case "date":
+        return <DateField key={f.key} label={f.label} value={val} onChange={onChange} />;
+      case "select":
+        return <SelectChips key={f.key} label={f.label} options={f.options} value={val} onChange={onChange} />;
+      case "multiselect":
+        return (
+          <MultiSelectChips
+            key={f.key}
+            label={f.label}
+            groups={f.groups}
+            value={val}
+            onChange={onChange}
+            supportOther={f.supportOther}
+            otherValue={values[f.otherKey]}
+            onOtherChange={(v) => setVal(f.otherKey, v)}
+            otherLabel={f.otherLabel}
+          />
+        );
+      default:
+        return <TextField key={f.key} label={f.label} value={val} onChange={onChange} placeholder={f.placeholder} />;
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/40 fade-in" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 fade-in" onClick={!saving ? onClose : undefined} />
       <div className="relative bg-white w-full max-w-2xl rounded-t-2xl flex flex-col fade-in" style={{ maxHeight: "90vh" }}>
         {/* Sticky header */}
         <div className="sticky top-0 bg-white border-b border-stone-200 px-5 py-4 flex items-center justify-between rounded-t-2xl">
           <h3 className="font-semibold text-stone-900">{title}</h3>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-700 p-1">
+          <button onClick={onClose} disabled={saving} className="text-stone-400 hover:text-stone-700 p-1 disabled:opacity-50">
             <CloseIcon className="w-6 h-6" />
           </button>
         </div>
 
         {/* Scrollable body */}
         <div className="overflow-y-auto px-5 py-4 flex-1">
-          {fields.map(f => (
-            <div key={f.key} className="mb-4">
-              <label className="block text-xs text-stone-500 mb-1.5">
-                {f.label}
-                {f.readOnly && <span className="ml-2 text-stone-400">(不可修改)</span>}
-              </label>
-              {f.type === "textarea" ? (
-                <textarea
-                  value={values[f.key] || ""}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                  disabled={f.readOnly}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition disabled:bg-stone-50 disabled:text-stone-400 resize-none"
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={values[f.key] || ""}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                  disabled={f.readOnly}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition disabled:bg-stone-50 disabled:text-stone-400"
-                />
-              )}
+          {fields.map(renderField)}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {error}
             </div>
-          ))}
+          )}
         </div>
 
         {/* Sticky footer */}
         <div className="sticky bottom-0 bg-white border-t border-stone-200 px-5 py-3">
           <button
             onClick={handleSave}
-            className="w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 rounded-lg transition"
+            disabled={saving}
+            className="w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 rounded-lg transition disabled:opacity-60"
           >
-            保存
+            {saving ? "保存中..." : "保存"}
           </button>
         </div>
       </div>
