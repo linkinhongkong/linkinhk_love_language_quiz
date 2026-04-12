@@ -5,6 +5,9 @@
 function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
+  const [currentMatch, setCurrentMatch] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [events, setEvents] = useState([]);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("match");
   const [profileSubTab, setProfileSubTab] = useState("me");
@@ -24,24 +27,28 @@ function Dashboard() {
     return () => window.removeEventListener("hashchange", handleHash);
   }, []);
 
-  // ---------------- Fetch profile on load ----------------
+  // ---------------- Bootstrap fetch on load ----------------
+  // One call replaces: verify-session, get-profile, and future per-tab fetches.
+  // Returns profile + currentMatch (with partnerProfile) + history + events.
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchBootstrap = async () => {
       try {
-        const res = await authenticatedFetch(API.GET_PROFILE, {
+        const res = await authenticatedFetch(API.BOOTSTRAP, {
           method: "POST",
           body: JSON.stringify({})
         });
 
         const data = await res.json();
 
-        if (data.success && data.profile) {
-          setProfile(data.profile);
+        if (data.success) {
+          setProfile(data.profile || null);
+          setCurrentMatch(data.currentMatch || null);
+          setHistory(data.history || []);
+          setEvents(data.events || []);
         } else {
           setError(data.error || "載入失敗");
         }
       } catch (err) {
-        // authenticatedFetch already handles 401 redirects
         if (err.message !== "Unauthorized" && err.message !== "No token") {
           console.error(err);
           setError("網絡連線錯誤");
@@ -51,7 +58,7 @@ function Dashboard() {
       }
     };
 
-    fetchProfile();
+    fetchBootstrap();
   }, []);
 
   const changeTab = (tabId) => {
@@ -80,9 +87,9 @@ function Dashboard() {
 
       {/* Main content */}
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {activeTab === "match" && <MatchTab profile={profile} />}
-        {activeTab === "events" && <EventsTab profile={profile} />}
-        {activeTab === "history" && <HistoryTab profile={profile} />}
+        {activeTab === "match" && <MatchTab profile={profile} currentMatch={currentMatch} />}
+        {activeTab === "events" && <EventsTab profile={profile} events={events} />}
+        {activeTab === "history" && <HistoryTab profile={profile} history={history} />}
         {activeTab === "profile" && (
           <ProfileTab
             profile={profile}
