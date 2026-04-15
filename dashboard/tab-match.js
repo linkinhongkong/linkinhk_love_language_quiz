@@ -66,7 +66,7 @@ function PhotoCarousel({ photos }) {
   };
 
   return (
-    <div className="relative w-full mb-4 fade-in" style={{ aspectRatio: "1 / 1" }}>
+    <div className="relative w-full fade-in" style={{ aspectRatio: "1 / 1" }}>
       <div className="relative w-full h-full overflow-hidden rounded-2xl bg-stone-100">
         <div
           className="absolute inset-0 flex transition-transform duration-300 ease-out"
@@ -249,7 +249,11 @@ function MatchTab({ profile, currentMatch }) {
   return (
     <div className="fade-in pb-4">
       <CompatibilityBanner score={currentMatch.compatibilityScore} />
-      <PhotoCarousel photos={photos} />
+
+      {/* Photo card with vertical padding */}
+      <div className="bg-white rounded-2xl border border-stone-200 mb-4" style={{ paddingTop: "20px", paddingBottom: "20px" }}>
+        <PhotoCarousel photos={photos} />
+      </div>
 
       {partner.name && (
         <h2 className="text-xl font-semibold text-stone-900 mb-3">
