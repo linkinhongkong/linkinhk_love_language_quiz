@@ -87,7 +87,13 @@ function Dashboard() {
 
       {/* Main content */}
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {activeTab === "match" && <MatchTab profile={profile} currentMatch={currentMatch} />}
+        {activeTab === "match" && (
+          <MatchTab
+            profile={profile}
+            currentMatch={currentMatch}
+            onMatchResponded={() => setCurrentMatch(null)}
+          />
+        )}
         {activeTab === "events" && <EventsTab profile={profile} events={events} />}
         {activeTab === "history" && <HistoryTab profile={profile} history={history} />}
         {activeTab === "profile" && (
