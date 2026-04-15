@@ -198,18 +198,20 @@ function Toast({ message, onDone }) {
 }
 
 // ---------------- Action buttons ----------------
-function ActionButtons({ onAccept, onReject }) {
+function ActionButtons({ onAccept, onReject, disabled }) {
   return (
     <div className="flex gap-3 mb-6 fade-in">
       <button
         onClick={onReject}
-        className="flex-1 py-3.5 rounded-full bg-stone-100 text-stone-700 font-medium hover:bg-stone-200 transition"
+        disabled={disabled}
+        className="flex-1 py-3.5 rounded-full bg-stone-100 text-stone-700 font-medium hover:bg-stone-200 transition disabled:opacity-50"
       >
         無興趣
       </button>
       <button
         onClick={onAccept}
-        className="flex-1 py-3.5 rounded-full text-white font-medium transition"
+        disabled={disabled}
+        className="flex-1 py-3.5 rounded-full text-white font-medium transition disabled:opacity-50"
         style={{ background: "linear-gradient(to right, #FF6EB4, #A259FF)" }}
       >
         想認識 💚
@@ -232,11 +234,49 @@ function NoMatchState() {
 }
 
 // ---------------- Main Match tab ----------------
-function MatchTab({ profile, currentMatch }) {
+function MatchTab({ profile, currentMatch, onMatchResponded }) {
   const [toast, setToast] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [responded, setResponded] = useState(false);
 
-  if (!currentMatch || !currentMatch.partnerProfile) {
-    return <NoMatchState />;
+  const handleResponse = async (response) => {
+    if (submitting || !currentMatch) return;
+    setSubmitting(true);
+    try {
+      const res = await authenticatedFetch(API.RESPOND_TO_MATCH, {
+        method: "POST",
+        body: JSON.stringify({
+          response: response,
+          side: currentMatch.mySide,
+          partnerEmail: currentMatch.partnerProfile.email,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast(response === "accept" ? "已回覆: 想認識 💚" : "已回覆: 無興趣");
+        setResponded(true);
+        // Tell parent to clear currentMatch from state so tab shows empty state
+        if (onMatchResponded) onMatchResponded();
+      } else {
+        setToast(data.error || "出錯,請再試");
+        setSubmitting(false);
+      }
+    } catch (err) {
+      if (err.message !== "Unauthorized" && err.message !== "No token") {
+        setToast("網絡連線錯誤");
+      }
+      setSubmitting(false);
+    }
+  };
+
+  // After response (or no match) → empty state
+  if (responded || !currentMatch || !currentMatch.partnerProfile) {
+    return (
+      <>
+        <NoMatchState />
+        {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      </>
+    );
   }
 
   const partner = currentMatch.partnerProfile;
@@ -265,8 +305,9 @@ function MatchTab({ profile, currentMatch }) {
       <BioCard bio={partner["my-bio"]} />
 
       <ActionButtons
-        onAccept={() => setToast("建設緊 💚")}
-        onReject={() => setToast("建設緊")}
+        onAccept={() => handleResponse("accept")}
+        onReject={() => handleResponse("reject")}
+        disabled={submitting}
       />
 
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
