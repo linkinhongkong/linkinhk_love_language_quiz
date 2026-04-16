@@ -1702,8 +1702,8 @@ function LinkInSignup() {
     return (
       <div className="step-content" key="s3">
         <div className="field">
-          <div className="field-label">你的興趣（選 3-6 個） <span className="req">*</span></div>
-          <div className={`interest-count ${countClass}`}>已選 {count} / 6</div>
+          <div className="field-label">你的興趣 <span className="req">*</span></div>
+        //<div className={`interest-count ${countClass}`}>已選 {count} / 6</div>
           {Object.entries(INTERESTS).map(([cat, items]) => (
             <div className="interest-cat" key={cat}>
               <div className="interest-cat-label">{cat}</div>
