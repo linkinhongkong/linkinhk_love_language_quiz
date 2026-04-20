@@ -965,6 +965,31 @@ const STYLES = `
   }
   .success-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(144, 96, 224, 0.4); }
 
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #e53e3e;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    box-shadow: 0 4px 20px rgba(229, 62, 62, 0.35);
+    z-index: 100;
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
   /* ── Mobile tweaks ── */
   @media (max-width: 500px) {
     .form-root { padding: 12px 8px 40px; }
@@ -987,6 +1012,7 @@ function LinkInSignup() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState("");
   const fileInputRef = useRef(null);
   const cardRef = useRef(null);
 
@@ -1104,10 +1130,9 @@ function LinkInSignup() {
   };
 
   /* ── Validation ── */
-  const validateStep = () => {
+  const getStepErrors = () => {
     const e = {};
     if (step === 0) {
-      // name, sex, orientation, occupation (+other), uni (+other/overseas), DOB, height
       if (!form.name.trim()) e.name = "請輸入名字";
       if (!form.sex) e.sex = "請選擇性別";
       if (!form.sexualOrientation) e.sexualOrientation = "請選擇性取向";
@@ -1120,39 +1145,33 @@ function LinkInSignup() {
       if (!form.height.trim()) e.height = "請輸入身高";
       else if (isNaN(Number(form.height)) || Number(form.height) < 100 || Number(form.height) > 250) e.height = "請輸入合理身高（100-250cm）";
     } else if (step === 1) {
-      // MBTI + love language
       if (!form.mbti) e.mbti = "請選擇 MBTI";
       if (!form.knowLoveLang) e.knowLoveLang = "請選擇";
     } else if (step === 2) {
-      // smoke, drink, religion, kids
       if (!form.drinking) e.drinking = "請選擇飲酒習慣";
       if (!form.smoking) e.smoking = "請選擇吸煙習慣";
       if (!form.religion) e.religion = "請選擇信仰";
       if (form.religion === "other_religion" && !form.religionOther.trim()) e.religionOther = "請填寫你嘅信仰";
       if (!form.kidsPref) e.kidsPref = "請選擇";
-    } else if (step === 3) {
-      // hobbies (17 Apr: now no min / max)
-      //if (form.interests.length < 3) e.interests = "請選擇至少 3 個興趣";
-      //if (form.interests.length > 6) e.interests = "最多選 6 個";
     } else if (step === 4) {
-      // activities: min 1, no max
       if (form.activities.length < 1) e.activities = "請選擇至少 1 個";
       if (form.activities.includes(ACTIVITY_OTHER_ID) && !form.activitiesOther.trim()) e.activitiesOther = "請填寫你嘅想法";
     } else if (step === 5) {
-      // photos: min 1, max 3
       if (!form.photos || form.photos.length < 1) e.photos = "請上傳至少一張照片";
     } else if (step === 6) {
-      // phone, email, ig
       if (!form.whatsapp.trim()) e.whatsapp = "請輸入 WhatsApp 號碼";
       if (!form.email.trim()) e.email = "請輸入電郵地址";
       else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "電郵格式唔正確";
       if (!form.instagram.trim()) e.instagram = "請輸入 Instagram 名稱";
-    } else if (step === 7) {
-      // bio — optional, no validation required
     } else if (step === 8) {
       if (form.referral.length === 0) e.referral = "請選擇至少一個";
       if (!form.consent) e.consent = "請同意會員條款先繼續";
     }
+    return e;
+  };
+
+  const validateStep = () => {
+    const e = getStepErrors();
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -1162,8 +1181,26 @@ function LinkInSignup() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2800);
+  };
+
   const next = () => {
-    if (!validateStep()) return;
+    const e = getStepErrors();
+    setErrors(e);
+    const errCount = Object.keys(e).length;
+    if (errCount > 0) {
+      showToast(`仲有 ${errCount} 題未填 ✏️`);
+      setTimeout(() => {
+        const firstErr = document.querySelector('.field-error');
+        if (firstErr) {
+          const field = firstErr.closest('.field') || firstErr;
+          field.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 80);
+      return;
+    }
     if (step < STEPS.length - 1) {
       setStep(s => s + 1);
       scrollToTop();
@@ -1698,7 +1735,7 @@ function LinkInSignup() {
   /* ── Step 3: 興趣愛好 — hobbies only ── */
   const renderStep3 = () => {
     const count = form.interests.length;
-    const countClass = count >= 3 && count <= 6 ? "ok" : count > 0 ? "warn" : "";
+    const countClass = count > 0 ? "ok" : "";
     return (
       <div className="step-content" key="s3">
         <div className="field">
@@ -1708,7 +1745,7 @@ function LinkInSignup() {
             <div className="interest-cat" key={cat}>
               <div className="interest-cat-label">{cat}</div>
               <div className="chip-grid">
-                {items.map(i => <MultiChip key={i.id} stateKey="interests" val={i.id} label={i.label} icon={i.icon} max={6} />)}
+                {items.map(i => <MultiChip key={i.id} stateKey="interests" val={i.id} label={i.label} icon={i.icon} />)}
               </div>
             </div>
           ))}
@@ -1955,6 +1992,7 @@ function LinkInSignup() {
   return (
     <>
       <style>{STYLES}</style>
+      <div className={`toast ${toast ? "show" : ""}`}>{toast}</div>
       <div className="form-root">
         <div className="form-card" ref={cardRef}>
           {submitting && (
