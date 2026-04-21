@@ -24,6 +24,8 @@ var PROFILE_CARD_CONFIGS = {
     title: "編輯個人簡介",
     fields: [
       { key: "name", label: "姓名" },
+      { key: "sex", label: "性別", readOnly: true },
+      { key: "my-age", label: "出生日期", readOnly: true },
       { key: "my-occupation", label: "職業", type: "select", options: OPTIONS.occupation },
       { key: "my-uni", label: "大學", type: "select", options: OPTIONS.university },
       { key: "my-height", label: "身高", type: "number", unit: "cm", min: 100, max: 250 },
@@ -31,7 +33,7 @@ var PROFILE_CARD_CONFIGS = {
         key: "sexual-orientation",
         label: "性取向",
         type: "multiselect",
-        groups: { "性取向": ["異性戀", "同性戀", "雙性戀"] },
+        groups: { " ": ["異性戀", "同性戀", "雙性戀"] },
       },
     ]
   },
@@ -103,6 +105,19 @@ function PhotoCell({ url, alt, className }) {
         </div>
       )}
     </div>
+  );
+}
+
+// Edit button — top-right, grey pencil icon matching Card component style
+function TopRightEditBtn({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="absolute top-3 right-3 p-1.5 text-stone-400 hover:text-stone-600 transition"
+      style={{ zIndex: 5 }}
+    >
+      <PencilIcon className="w-4 h-4" />
+    </button>
   );
 }
 
@@ -330,17 +345,20 @@ function WhoIAm({ profile, onProfileUpdated }) {
         )}
       </div>
 
-      {/* ---------- Card 2: Photos (uses Card for consistent edit icon) ---------- */}
-      <Card onEdit={function() { setEditingPhotos(true); }}>
+      {/* ---------- Card 2: Photos (raw div + top-right edit) ---------- */}
+      <div className="bg-white rounded-xl border border-stone-200 p-4 mb-4 relative">
+        <TopRightEditBtn onClick={function() { setEditingPhotos(true); }} />
         <div className="grid grid-cols-3 grid-rows-2 gap-2" style={{ aspectRatio: "3/2" }}>
           <PhotoCell url={photos[0]} alt="photo-1" className="col-span-2 row-span-2" />
           <PhotoCell url={photos[1]} alt="photo-2" />
           <PhotoCell url={photos[2]} alt="photo-3" />
         </div>
-      </Card>
+      </div>
 
-      {/* ---------- Card 3: Summary (uses Card for consistent edit icon) ---------- */}
-      <Card onEdit={function() { openSheet("summary"); }}>
+      {/* ---------- Card 3: Summary (raw div + top-right edit) ---------- */}
+      <div className="bg-white rounded-xl border border-stone-200 p-5 mb-4 relative">
+        <TopRightEditBtn onClick={function() { openSheet("summary"); }} />
+
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h2 className="text-xl font-semibold text-stone-900">
             {profile.name || <span className="text-stone-300">未填寫</span>}
@@ -357,7 +375,7 @@ function WhoIAm({ profile, onProfileUpdated }) {
           {profile["my-occupation"] && <div>💼 {profile["my-occupation"]}</div>}
           {profile["my-uni"] && <div>🎓 {profile["my-uni"]}</div>}
         </div>
-      </Card>
+      </div>
 
       {/* ---------- Card 4: Bio ---------- */}
       <Card icon="💬" title="自我介紹" onEdit={function() { setEditingBio(true); }}>
