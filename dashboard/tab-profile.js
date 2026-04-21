@@ -11,25 +11,25 @@ function ProfileTab({ profile, subTab, setSubTab, onLogout, onProfileUpdated }) 
 
   return (
     <div className="fade-in">
-      {/* Sub-tabs */}
+      {/* Sub-tabs — update hash so URL stays in sync */}
       <div className="bg-white rounded-xl border border-stone-200 p-1 flex mb-4">
         <button
-          onClick={function() { setSubTab("me"); }}
+          onClick={function() { window.location.hash = "profile"; }}
           className={"flex-1 py-2 text-sm font-medium rounded-lg transition " +
             (subTab === "me"
               ? "bg-stone-900 text-white"
               : "text-stone-500 hover:text-stone-900")}
         >
-          關於我
+          我自己
         </button>
         <button
-          onClick={function() { setSubTab("want"); }}
+          onClick={function() { window.location.hash = "ideal"; }}
           className={"flex-1 py-2 text-sm font-medium rounded-lg transition " +
             (subTab === "want"
               ? "bg-stone-900 text-white"
               : "text-stone-500 hover:text-stone-900")}
         >
-          理想型
+          我想要
         </button>
       </div>
 
