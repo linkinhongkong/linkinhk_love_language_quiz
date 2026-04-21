@@ -16,8 +16,15 @@ function Dashboard() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace("#", "");
-      if (TAB_IDS.includes(hash)) {
+
+      // #ideal is a virtual route → profile tab with "want" sub-tab
+      if (hash === "ideal") {
+        setActiveTab("profile");
+        setProfileSubTab("want");
+      } else if (TAB_IDS.includes(hash)) {
         setActiveTab(hash);
+        // Landing on #profile always defaults to "me" sub-tab
+        if (hash === "profile") setProfileSubTab("me");
       } else {
         setActiveTab("match");
       }
@@ -28,8 +35,6 @@ function Dashboard() {
   }, []);
 
   // ---------------- Bootstrap fetch on load ----------------
-  // One call replaces: verify-session, get-profile, and future per-tab fetches.
-  // Returns profile + currentMatch (with partnerProfile) + history + events.
   useEffect(() => {
     const fetchBootstrap = async () => {
       try {
