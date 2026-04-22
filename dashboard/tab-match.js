@@ -2,8 +2,6 @@
 // tab-match.js — the Match tab (default landing tab)
 // ============================================================
 
-// ---------------- Helpers ----------------
-
 function ageFromDOB(dob) {
   if (!dob) return null;
   const d = new Date(dob);
@@ -32,7 +30,7 @@ function zodiacFromDOB(dob) {
     { name: "獅子座", emoji: "♌", from: [7, 23], to: [8, 22] },
     { name: "處女座", emoji: "♍", from: [8, 23], to: [9, 22] },
     { name: "天秤座", emoji: "♎", from: [9, 23], to: [10, 22] },
-    { name: "天蠍座", emoji: "♏", from: [10, 23], to: [11, 21] },
+    { name: "天蝍座", emoji: "♏", from: [10, 23], to: [11, 21] },
     { name: "射手座", emoji: "♐", from: [11, 22], to: [12, 21] },
   ];
   for (const s of signs) {
@@ -47,126 +45,32 @@ function zodiacFromDOB(dob) {
   return null;
 }
 
-// ---------------- Photo Carousel ----------------
-// Photo-1 default with 5% peek of photo-2 right and photo-3 left.
-// Always shows dots + arrows; arrows hide at edges.
-function PhotoCarousel({ photos }) {
-  const [index, setIndex] = useState(0);
-  const validPhotos = photos.filter(p => p && String(p).trim() !== "");
-  const count = validPhotos.length;
-
-  if (count === 0) return null;
-
-  const showLeft = index > 0;
-  const showRight = index < count - 1;
-
-  const go = (newIdx) => {
-    if (newIdx < 0 || newIdx >= count) return;
-    setIndex(newIdx);
-  };
-
-  return (
-    <div className="relative w-full fade-in" style={{ aspectRatio: "1 / 1" }}>
-      <div className="relative w-full h-full overflow-hidden rounded-2xl">
-        <div
-          className="absolute inset-0 flex transition-transform duration-300 ease-out"
-          style={{
-            // Each slide is 90% wide; offset shifts by 90% per index, with 5% initial padding
-            transform: `translateX(calc(${-index * 90}% + 5%))`,
-          }}
-        >
-          {validPhotos.map((url, i) => (
-            <div key={i} className="flex-shrink-0 px-1" style={{ width: "90%" }}>
-              <img
-                src={url}
-                alt={`Photo ${i + 1}`}
-                className="w-full h-full object-cover rounded-2xl"
-                style={{ aspectRatio: "1 / 1" }}
-                onError={(e) => { e.target.style.opacity = "0.3"; }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {showLeft && (
-        <button
-          onClick={() => go(index - 1)}
-          className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-stone-700 hover:bg-white transition z-10"
-          aria-label="上一張"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-      )}
-
-      {showRight && (
-        <button
-          onClick={() => go(index + 1)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-stone-700 hover:bg-white transition z-10"
-          aria-label="下一張"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      )}
-
-      {count > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-          {validPhotos.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => go(i)}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index ? "w-6 bg-white" : "w-1.5 bg-white/50"
-              }`}
-              aria-label={`跳到第 ${i + 1} 張`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ---------------- Info chips ----------------
-function InfoChip({ children }) {
-  return (
-    <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-stone-100 text-stone-800 text-sm">
-      {children}
-    </span>
-  );
+function MatchInfoChip({ children }) {
+  return <span className="info-chip">{children}</span>;
 }
 
 function InfoChipsRow({ partner }) {
   const age = ageFromDOB(partner["my-age"]);
   const zodiac = zodiacFromDOB(partner["my-age"]);
   const chips = [];
-
-  if (age != null) chips.push(<InfoChip key="age">🎂 {age}歲</InfoChip>);
-  if (partner["my-height"]) chips.push(<InfoChip key="h">📏 {partner["my-height"]}cm</InfoChip>);
-  if (partner["my-occupation"]) chips.push(<InfoChip key="occ">{partner["my-occupation"]}</InfoChip>);
-  if (partner["my-uni"]) chips.push(<InfoChip key="uni">🎓 {partner["my-uni"]}</InfoChip>);
-  if (zodiac) chips.push(<InfoChip key="z">{zodiac.emoji} {zodiac.name}</InfoChip>);
-  if (partner["my-MBTI"]) chips.push(<InfoChip key="mbti">{partner["my-MBTI"]}</InfoChip>);
-  if (partner["my-religion"]) chips.push(<InfoChip key="r">⛪ {partner["my-religion"]}</InfoChip>);
-
+  if (age != null) chips.push(<MatchInfoChip key="age">🎂 {age}歲</MatchInfoChip>);
+  if (partner["my-height"]) chips.push(<MatchInfoChip key="h">📏 {partner["my-height"]}cm</MatchInfoChip>);
+  if (partner["my-occupation"]) chips.push(<MatchInfoChip key="occ">{partner["my-occupation"]}</MatchInfoChip>);
+  if (partner["my-uni"]) chips.push(<MatchInfoChip key="uni">🎓 {partner["my-uni"]}</MatchInfoChip>);
+  if (zodiac) chips.push(<MatchInfoChip key="z">{zodiac.emoji} {zodiac.name}</MatchInfoChip>);
+  if (partner["my-MBTI"]) chips.push(<MatchInfoChip key="mbti">{partner["my-MBTI"]}</MatchInfoChip>);
+  if (partner["my-religion"]) chips.push(<MatchInfoChip key="r">⛪ {partner["my-religion"]}</MatchInfoChip>);
   if (chips.length === 0) return null;
-
-  return <div className="flex flex-wrap gap-2 mb-4">{chips}</div>;
+  return <div className="flex flex-wrap gap-sm mb-lg">{chips}</div>;
 }
 
 // ---------------- Compatibility banner ----------------
 function CompatibilityBanner({ score }) {
   return (
-    <div
-      className="rounded-2xl p-4 mb-4 text-white text-center fade-in"
-      style={{ background: "linear-gradient(to right, #FF6EB4, #A259FF)" }}
-    >
-      <div className="text-xs opacity-90 mb-1">你哋互相選擇對方為理想型 ✨</div>
-      <div className="text-2xl font-bold">匹配度 {score}%</div>
+    <div className="compat-banner">
+      <div className="compat-banner-sub">你哋互相選擇對方為理想型 ✨</div>
+      <div className="compat-banner-score">匹配度 {score}%</div>
     </div>
   );
 }
@@ -175,11 +79,9 @@ function CompatibilityBanner({ score }) {
 function BioCard({ bio }) {
   if (!bio || String(bio).trim() === "") return null;
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-5 mb-4 fade-in">
-      <div className="text-xs text-stone-500 mb-2">關於佢</div>
-      <p className="text-stone-800 whitespace-pre-wrap leading-relaxed text-sm">
-        {bio}
-      </p>
+    <div className="bio-card fade-in">
+      <div className="bio-card-label">關於佢</div>
+      <p className="bio-card-text">{bio}</p>
     </div>
   );
 }
@@ -190,30 +92,17 @@ function Toast({ message, onDone }) {
     const t = setTimeout(onDone, 2500);
     return () => clearTimeout(t);
   }, []);
-  return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-stone-900 text-white px-5 py-3 rounded-full text-sm shadow-lg z-50 fade-in">
-      {message}
-    </div>
-  );
+  return <div className="toast-neutral">{message}</div>;
 }
 
 // ---------------- Action buttons ----------------
 function ActionButtons({ onAccept, onReject, disabled }) {
   return (
-    <div className="flex gap-3 mb-6 fade-in">
-      <button
-        onClick={onReject}
-        disabled={disabled}
-        className="flex-1 py-3.5 rounded-full bg-stone-100 text-stone-700 font-medium hover:bg-stone-200 transition disabled:opacity-50"
-      >
+    <div className="match-actions fade-in">
+      <button onClick={onReject} disabled={disabled} className="btn-pill secondary">
         無興趣
       </button>
-      <button
-        onClick={onAccept}
-        disabled={disabled}
-        className="flex-1 py-3.5 rounded-full text-white font-medium transition disabled:opacity-50"
-        style={{ background: "linear-gradient(to right, #FF6EB4, #A259FF)" }}
-      >
+      <button onClick={onAccept} disabled={disabled} className="btn-pill primary">
         想認識 💚
       </button>
     </div>
@@ -223,11 +112,11 @@ function ActionButtons({ onAccept, onReject, disabled }) {
 // ---------------- Empty state ----------------
 function NoMatchState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 fade-in">
-      <div className="text-5xl mb-4">💌</div>
-      <p className="text-stone-700 font-medium mb-1">今個禮拜暫時未有配對</p>
-      <p className="text-stone-500 text-sm text-center max-w-xs">
-        我哋每星期二夜晚送出新嘅配對結果,記得返嚟睇睇 ✨
+    <div className="flex flex-col items-center justify-center fade-in" style={{ padding: "80px 0" }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>💌</div>
+      <p style={{ color: "var(--text)", fontWeight: 500, marginBottom: 4 }}>今個禮拜暫時未有配對</p>
+      <p style={{ color: "var(--text-light)", fontSize: 14, textAlign: "center", maxWidth: 300 }}>
+        我哋每星期二夜晚送出新嘅配對結果,記得返嘅睬睬 ✨
       </p>
     </div>
   );
@@ -246,7 +135,7 @@ function MatchTab({ profile, currentMatch, onMatchResponded }) {
       const res = await authenticatedFetch(API.RESPOND_TO_MATCH, {
         method: "POST",
         body: JSON.stringify({
-          response: response,
+          response,
           side: currentMatch.mySide,
           partnerEmail: currentMatch.partnerProfile.email,
         }),
@@ -255,7 +144,6 @@ function MatchTab({ profile, currentMatch, onMatchResponded }) {
       if (data.success) {
         setToast(response === "accept" ? "已回覆: 想認識 💚" : "已回覆: 無興趣");
         setResponded(true);
-        // Tell parent to clear currentMatch from state so tab shows empty state
         if (onMatchResponded) onMatchResponded();
       } else {
         setToast(data.error || "出錯,請再試");
@@ -269,7 +157,6 @@ function MatchTab({ profile, currentMatch, onMatchResponded }) {
     }
   };
 
-  // After response (or no match) → empty state
   if (responded || !currentMatch || !currentMatch.partnerProfile) {
     return (
       <>
@@ -280,23 +167,23 @@ function MatchTab({ profile, currentMatch, onMatchResponded }) {
   }
 
   const partner = currentMatch.partnerProfile;
-  const photos = [
-    partner["my-photo-1"],
-    partner["my-photo-2"],
-    partner["my-photo-3"],
-  ];
+  const photos = [partner["my-photo-1"], partner["my-photo-2"], partner["my-photo-3"]];
 
   return (
-    <div className="fade-in pb-4">
+    <div className="fade-in" style={{ paddingBottom: 16 }}>
       <CompatibilityBanner score={currentMatch.compatibilityScore} />
 
-      {/* Photo card with vertical padding */}
-      <div className="rounded-2xl mb-4 bg-stone-100" style={{ paddingTop: "20px", paddingBottom: "20px" }}>
+      <div style={{
+        borderRadius: "var(--radius)",
+        marginBottom: 16,
+        background: "var(--chip-bg)",
+        padding: "20px 0",
+      }}>
         <PhotoCarousel photos={photos} />
       </div>
 
       {partner.name && (
-        <h2 className="text-xl font-semibold text-stone-900 mb-3">
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text)", marginBottom: 12 }}>
           {partner.name}
         </h2>
       )}

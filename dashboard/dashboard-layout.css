@@ -1,0 +1,487 @@
+/* ════════════════════════════════════════════════════════════
+   Dashboard-only composition (Card, Row, Carousel, layout shell)
+   Reuses the shared tokens above.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── App shell ── */
+.app-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-header-inner {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-header .logo-img { height: 28px; opacity: 0.9; margin: 0; }
+.app-header-email {
+  font-size: 12px;
+  color: var(--text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.app-main {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--white);
+  border-top: 1px solid var(--border-light);
+  z-index: 20;
+}
+.bottom-nav-inner {
+  max-width: 42rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-around;
+}
+.bottom-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+.bottom-nav-btn.active { color: var(--accent); }
+.bottom-nav-btn:hover { color: var(--text); }
+.bottom-nav-btn.active:hover { color: var(--accent); }
+.bottom-nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── Sub-tab switcher (關於我 / 理想型) ── */
+.subtab-switcher {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  display: flex;
+  margin-bottom: 16px;
+}
+.subtab-btn {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.subtab-btn:hover { color: var(--text); }
+.subtab-btn.active {
+  background: var(--accent-gradient);
+  color: white;
+}
+
+/* ── Dashboard card (display wrapper) ── */
+.dash-card {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.dash-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.dash-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.dash-card-helper {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.dash-row {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.dash-row:last-child { border-bottom: none; }
+.dash-row-label { font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
+.dash-row-value { color: var(--text); word-break: break-word; }
+.dash-row-empty { color: #ccc; }
+.dash-chip-readonly {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--chip-bg);
+  color: var(--text-hint);
+  font-size: 12px;
+  border-radius: var(--radius-pill);
+}
+
+/* ── Range display (read-only, in WhatIWant cards) ── */
+.dash-range-value {
+  text-align: center;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.dash-range-dash { color: var(--text-light); margin: 0 4px; }
+.dash-range-track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(to right, #fef3c7, #fbbf24, #fef3c7);
+}
+
+/* ── Want deal-breaker chip inline ── */
+.dash-db-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  margin-left: 8px;
+}
+
+/* ── Photo carousel (Match + History) ── */
+.carousel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+.carousel-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+.carousel-track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  transition: transform 0.3s ease-out;
+}
+.carousel-slide {
+  flex-shrink: 0;
+  width: 90%;
+  padding: 0 4px;
+}
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius);
+  aspect-ratio: 1 / 1;
+}
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border: none;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s;
+}
+.carousel-arrow:hover { background: white; }
+.carousel-arrow.left { left: 8px; }
+.carousel-arrow.right { right: 8px; }
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+.carousel-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.5);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+.carousel-dot.active {
+  width: 24px;
+  background: white;
+}
+
+/* ── Compatibility banner (Match tab) ── */
+.compat-banner {
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--accent-gradient);
+  color: white;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+.compat-banner-sub { font-size: 12px; opacity: 0.9; margin-bottom: 4px; }
+.compat-banner-score { font-size: 24px; font-weight: 700; }
+
+/* ── Match tab info chips ── */
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--chip-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+.info-chip-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-hint);
+}
+
+/* ── Bio card (Match + History) ── */
+.bio-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.bio-card-label {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.bio-card-text {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* ── Status chip (History) ── */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-chip.matched {
+  background: var(--accent-gradient);
+  color: white;
+}
+.status-chip.unmatched {
+  background: var(--border);
+  color: var(--text-hint);
+}
+
+/* ── History card (list) ── */
+.history-card {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  color: var(--text);
+}
+.history-card:hover { border-color: var(--border); }
+.history-card-photo {
+  width: 25%;
+  aspect-ratio: 1;
+  background: var(--chip-bg);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.history-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+.history-card-photo-empty { color: #ccc; font-size: 28px; }
+.history-card-body {
+  flex: 1;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+.history-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-card-time {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 8px;
+}
+
+/* ── Profile completeness card ── */
+.completeness-card {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.completeness-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.completeness-label { font-size: 12px; font-weight: 500; color: var(--text); }
+.completeness-percent { font-size: 14px; font-weight: 600; color: var(--text); }
+.completeness-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.completeness-fill {
+  height: 100%;
+  background: linear-gradient(to right, #fcd34d, #eab308);
+  transition: width 0.4s ease;
+}
+.completeness-hint { font-size: 12px; color: var(--text-light); }
+.completeness-hint.done { color: var(--green-text); }
+
+/* ── Photo cell (WhoIAm card) ── */
+.photo-cell {
+  background: var(--chip-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.photo-cell img { width: 100%; height: 100%; object-fit: cover; }
+.photo-cell-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 12px;
+}
+.photo-grid-2x3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  aspect-ratio: 3 / 2;
+}
+.photo-grid-2x3 .span-2x2 { grid-column: span 2; grid-row: span 2; }
+
+/* ── Top-right edit button on cards ── */
+.card-edit-top {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+}
+
+/* ── Summary card name row ── */
+.summary-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.summary-details { font-size: 14px; color: var(--text-hint); line-height: 1.6; }
+
+/* ── Logout button ── */
+.logout-btn {
+  width: 100%;
+  margin-top: 24px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  color: var(--text-hint);
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+.logout-btn:hover { background: var(--chip-bg); }
+
+/* ── Back button (History detail) ── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-light);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+.back-btn:hover { color: var(--text); }
+
+/* ── Match action buttons (pair) ── */
+.match-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.match-actions .btn-pill { flex: 1; padding: 14px 20px; }

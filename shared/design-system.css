@@ -1,0 +1,9 @@
+/* ============================================================
+   Link in HK — Shared Design System (master file)
+   Used by: member-form, dashboard, thank-you, join
+   This file imports the 3 part files below so all pages only
+   need one <link rel="stylesheet" href="/shared/design-system.css">.
+   ============================================================ */
+@import url("/shared/css/tokens-forms.css");
+@import url("/shared/css/components.css");
+@import url("/shared/css/effects.css");
