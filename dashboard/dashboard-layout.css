@@ -189,7 +189,6 @@
   position: absolute;
   top: 50%;
   aspect-ratio: 1 / 1;
-  animation: carouselFade 0.3s ease-out;
 }
 .carousel-slide img {
   width: 100%;
@@ -211,11 +210,6 @@
 .carousel-slide.peek img { filter: brightness(0.55); }
 .carousel-slide.peek.left { left: 0; transform: translate(0, -50%); }
 .carousel-slide.peek.right { right: 0; transform: translate(0, -50%); }
-
-@keyframes carouselFade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 
 .carousel-controls {
   display: flex;

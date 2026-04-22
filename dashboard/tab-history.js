@@ -5,11 +5,20 @@
 function HistoryTab({ profile, history }) {
   const [selected, setSelected] = useState(null);
 
+  const seen = new Set();
+  const uniqueHistory = (history || []).filter((m) => {
+    const partnerEmail = (m.partnerProfile && m.partnerProfile.email) || "";
+    const key = `${partnerEmail}|${m.createdAt || ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   if (selected) {
     return <HistoryDetail match={selected} onBack={() => setSelected(null)} />;
   }
 
-  if (!history || history.length === 0) {
+  if (uniqueHistory.length === 0) {
     return (
       <div className="fade-in flex flex-col items-center justify-center" style={{ padding: "80px 0" }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>🕐</div>
@@ -21,8 +30,12 @@ function HistoryTab({ profile, history }) {
 
   return (
     <div className="fade-in flex flex-col gap-md">
-      {history.map((m) => (
-        <HistoryCard key={m.id} match={m} onClick={() => setSelected(m)} />
+      {uniqueHistory.map((m, i) => (
+        <HistoryCard
+          key={`${(m.partnerProfile && m.partnerProfile.email) || "?"}-${m.createdAt || i}`}
+          match={m}
+          onClick={() => setSelected(m)}
+        />
       ))}
     </div>
   );
@@ -74,38 +87,37 @@ function HistoryDetail({ match, onBack }) {
       </button>
 
       {photos.length > 0 && (
-        <div style={{
-          background: "var(--chip-bg)",
-          borderRadius: "var(--radius)",
-          padding: 20,
-          marginBottom: 16,
-        }}>
+        <div style={{ marginBottom: 16 }}>
           <PhotoCarousel photos={photos} />
         </div>
       )}
 
-      <div style={{ marginBottom: 12 }}>
-        <div className="flex items-center gap-sm flex-wrap">
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text)" }}>{p.name || ""}</h2>
-          <StatusChip matched={matched} />
+      <Card>
+        <div style={{ marginBottom: 12 }}>
+          <div className="flex items-center gap-sm flex-wrap">
+            {p.name && (
+              <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--text)" }}>{p.name}</h2>
+            )}
+            <StatusChip matched={matched} />
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-light)", marginTop: 4 }}>
+            {formatMatchTime(match.createdAt)}
+          </div>
         </div>
-        <div style={{ fontSize: 12, color: "var(--text-light)", marginTop: 4 }}>
-          {formatMatchTime(match.createdAt)}
-        </div>
-      </div>
 
-      <div className="flex flex-wrap gap-sm mb-lg">
-        {buildChips(p).map((c, i) => (
-          <HistoryInfoChip key={i} text={c} />
-        ))}
-      </div>
-
-      {p["my-bio"] && (
-        <div className="bio-card">
-          <div className="bio-card-label">關於佢</div>
-          <div className="bio-card-text">{p["my-bio"]}</div>
+        <div className="flex flex-wrap gap-sm" style={{ marginBottom: p["my-bio"] ? 16 : 0 }}>
+          {buildChips(p).map((c, i) => (
+            <HistoryInfoChip key={i} text={c} />
+          ))}
         </div>
-      )}
+
+        {p["my-bio"] && (
+          <div>
+            <div className="bio-card-label">關於佢</div>
+            <p className="bio-card-text">{p["my-bio"]}</p>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
