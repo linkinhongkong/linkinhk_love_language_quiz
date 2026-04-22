@@ -2,29 +2,126 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>會員登入 · Link in HK</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Link in HK 會員登入" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/design-system.css">
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang HK", "Microsoft JhengHei", sans-serif;
-      background-color: #fafaf9;
+    /* Login page-specific styles. Tokens + shared components come from design-system.css. */
+
+    .login-header {
+      padding: 36px 24px 0;
+      text-align: center;
     }
-    .fade-in {
-      animation: fadeIn 0.4s ease-out;
+    .login-logo { height: 22px; opacity: 0.8; margin-bottom: 24px; }
+    .login-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+    .login-subtitle { font-size: 14px; color: var(--text-light); line-height: 1.7; }
+    .login-subtitle-strong { color: var(--text); font-weight: 600; }
+
+    .login-body { padding: 24px 24px 8px; }
+    .login-nav-row { padding: 8px 24px 20px; }
+
+    .otp-icon {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      border: 2px solid rgba(144, 96, 224, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 16px;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+
+    .code-input {
+      text-align: center;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.4em;
+      padding: 16px;
+      font-family: var(--font-accent);
     }
-    .spin {
-      animation: spin 0.8s linear infinite;
+
+    .error-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--red-bg);
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #b91c1c;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+
+    .login-meta {
+      margin-top: 4px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .login-link {
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .login-link:hover { color: var(--accent); }
+    .login-link.underline { text-decoration: underline; text-underline-offset: 2px; }
+    .login-link:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .login-footer {
+      padding: 16px 24px 24px;
+      text-align: center;
+      border-top: 1px solid var(--border-light);
+    }
+    .login-footer-text { font-size: 13px; color: var(--text-light); line-height: 1.7; }
+    .login-footer-text a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .login-footer-text a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+    .check-screen { padding: 64px 24px; text-align: center; }
+
+    .debug-box {
+      background: var(--chip-bg);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .debug-box-label { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+    .debug-box-value {
+      font-size: 11px;
+      color: var(--text-hint);
+      font-family: var(--font-accent);
+      word-break: break-all;
+    }
+
+    .site-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 16px;
+      font-family: var(--font-accent);
+      letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 500px) {
+      .login-header { padding: 28px 20px 0; }
+      .login-body { padding: 20px 20px 4px; }
+      .login-nav-row { padding: 8px 20px 18px; }
+      .login-footer { padding: 14px 20px 22px; }
     }
   </style>
 </head>
@@ -52,17 +149,14 @@
 
       const codeInputRef = useRef(null);
 
-      // Auto-focus the code input when we switch to the code screen
       useEffect(() => {
         if (screen === "code" && codeInputRef.current) {
           setTimeout(() => codeInputRef.current.focus(), 100);
         }
       }, [screen]);
 
-      // ---------------- Optimistic redirect on page load ----------------
-      // If user has a saved token, trust it and redirect to dashboard.
-      // The dashboard's bootstrap call will validate the token and bounce back
-      // here if it's invalid. Saves one n8n execution per session.
+      // Optimistic redirect on page load: if a token exists, trust it and
+      // go to dashboard. Dashboard bootstrap will bounce back here if invalid.
       useEffect(() => {
         const savedToken = localStorage.getItem("linkinhk_token");
         if (savedToken) {
@@ -72,7 +166,6 @@
         setScreen("email");
       }, []);
 
-      // ---------------- Email submit ----------------
       const handleEmailSubmit = async () => {
         if (!email.trim()) {
           setErrorMsg("請輸入電郵地址");
@@ -118,7 +211,6 @@
         }
       };
 
-      // ---------------- Code submit ----------------
       const handleCodeSubmit = async () => {
         if (code.length !== 6) {
           setErrorMsg("請輸入 6 位數字驗證碼");
@@ -144,7 +236,6 @@
           if (data.success && data.token) {
             localStorage.setItem("linkinhk_token", data.token);
             localStorage.setItem("linkinhk_email", data.email);
-            // Redirect to dashboard
             window.location.href = "/dashboard";
             return;
           } else {
@@ -159,7 +250,6 @@
         }
       };
 
-      // ---------------- Resend code ----------------
       const handleResend = async () => {
         setStatus("loading");
         setErrorMsg("");
@@ -188,7 +278,6 @@
         }
       };
 
-      // ---------------- Logout ----------------
       const handleLogout = () => {
         localStorage.removeItem("linkinhk_token");
         localStorage.removeItem("linkinhk_email");
@@ -200,7 +289,6 @@
         setErrorMsg("");
       };
 
-      // ---------------- Back to email ----------------
       const handleBackToEmail = () => {
         setCode("");
         setStatus("idle");
@@ -226,181 +314,169 @@
       };
 
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
-          <div className="w-full max-w-md">
+        <div className="form-root">
+          <div style={{ width: "100%", maxWidth: 480 }}>
+            <div className="page-card">
 
-            {/* Logo */}
-            <div className="flex justify-center mb-8">
-              <img src="/logo.png" alt="Link in HK" className="h-12 w-auto" />
-            </div>
-
-            {/* Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 fade-in" key={screen}>
-
-              {/* ---------- CHECKING SCREEN ---------- */}
+              {/* ---------- CHECKING ---------- */}
               {screen === "checking" && (
-                <div className="text-center py-8">
-                  <div className="w-10 h-10 mx-auto mb-4 border-4 border-stone-200 border-t-stone-900 rounded-full spin"></div>
-                  <p className="text-sm text-stone-500">檢查登入狀態中...</p>
+                <div className="check-screen fade-in">
+                  <div className="spinner" style={{ margin: "0 auto 16px" }} />
+                  <p style={{ fontSize: 14, color: "var(--text-light)" }}>檢查登入狀態中...</p>
                 </div>
               )}
 
-              {/* ---------- EMAIL SCREEN ---------- */}
+              {/* ---------- EMAIL ---------- */}
               {screen === "email" && (
-                <>
-                  <h1 className="text-2xl font-semibold text-stone-900 mb-2">會員登入</h1>
-                  <p className="text-sm text-stone-500 mb-6">
-                    輸入你的電郵,我哋會寄一個驗證碼俾你 ✉️
-                  </p>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-stone-700 mb-2">
-                      電郵地址
-                    </label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (status === "error") setStatus("idle");
-                      }}
-                      onKeyDown={handleEmailKeyDown}
-                      placeholder="you@example.com"
-                      disabled={status === "loading"}
-                      className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition disabled:bg-stone-50"
-                    />
+                <div className="fade-in" key="email">
+                  <div className="login-header">
+                    <img src="/logo.png" alt="Link in HK" className="login-logo" />
+                    <div className="login-title">會員登入</div>
+                    <div className="login-subtitle">
+                      輸入你的電郵,我哋會寄一個驗證碼俾你 ✉️
+                    </div>
                   </div>
 
-                  {status === "error" && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 fade-in">
-                      {errorMsg}
+                  <div className="login-body">
+                    <div className="field" style={{ marginBottom: 16 }}>
+                      <label className="field-label">電郵地址</label>
+                      <input
+                        type="email"
+                        className="text-input"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (status === "error") setStatus("idle");
+                        }}
+                        onKeyDown={handleEmailKeyDown}
+                        placeholder="you@example.com"
+                        disabled={status === "loading"}
+                      />
                     </div>
-                  )}
 
-                  <button
-                    onClick={handleEmailSubmit}
-                    disabled={status === "loading"}
-                    className="w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 px-4 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {status === "loading" ? "傳送緊..." : "傳送驗證碼"}
-                  </button>
+                    {status === "error" && (
+                      <div className="error-box fade-in">{errorMsg}</div>
+                    )}
+                  </div>
 
-                  <div className="mt-6 pt-6 border-t border-stone-100 text-center">
-                    <p className="text-sm text-stone-500">
+                  <div className="login-nav-row">
+                    <button
+                      onClick={handleEmailSubmit}
+                      disabled={status === "loading"}
+                      className="nav-btn primary"
+                      style={{ width: "100%" }}
+                    >
+                      {status === "loading" ? "傳送緊..." : "傳送驗證碼 ✨"}
+                    </button>
+                  </div>
+
+                  <div className="login-footer">
+                    <div className="login-footer-text">
                       仲未係會員?{" "}
-                      <a
-                        href="https://www.linkinhk.com/join"
-                        className="text-stone-900 font-medium underline underline-offset-2 hover:text-yellow-600 transition"
-                      >
-                        即刻登記
-                      </a>
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {/* ---------- CODE SCREEN ---------- */}
-              {screen === "code" && (
-                <>
-                  <div className="w-14 h-14 mx-auto mb-4 bg-yellow-50 border-2 border-yellow-300 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">📬</span>
-                  </div>
-
-                  <h1 className="text-2xl font-semibold text-stone-900 mb-2 text-center">
-                    輸入驗證碼
-                  </h1>
-                  <p className="text-sm text-stone-500 mb-6 text-center leading-relaxed">
-                    我哋已經寄咗 6 位數字驗證碼去<br />
-                    <span className="text-stone-900 font-medium">{email}</span>
-                  </p>
-
-                  <div className="mb-4">
-                    <input
-                      ref={codeInputRef}
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      value={code}
-                      onChange={handleCodeChange}
-                      onKeyDown={handleCodeKeyDown}
-                      placeholder="000000"
-                      disabled={status === "loading"}
-                      className="w-full px-4 py-4 border border-stone-300 rounded-lg text-center text-3xl font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition disabled:bg-stone-50"
-                    />
-                  </div>
-
-                  {status === "error" && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 fade-in">
-                      {errorMsg}
+                      <a href="https://www.linkinhk.com/join">即刻登記 💜</a>
                     </div>
-                  )}
-
-                  <button
-                    onClick={handleCodeSubmit}
-                    disabled={status === "loading" || code.length !== 6}
-                    className="w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 px-4 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {status === "loading" ? "驗證緊..." : "登入"}
-                  </button>
-
-                  <div className="mt-6 pt-6 border-t border-stone-100 flex items-center justify-between text-sm">
-                    <button
-                      onClick={handleBackToEmail}
-                      className="text-stone-500 hover:text-stone-900 transition"
-                    >
-                      ← 返回
-                    </button>
-                    <button
-                      onClick={handleResend}
-                      disabled={status === "loading"}
-                      className="text-stone-500 hover:text-stone-900 underline underline-offset-2 transition disabled:opacity-50"
-                    >
-                      重新傳送驗證碼
-                    </button>
                   </div>
-                </>
+                </div>
               )}
 
-              {/* ---------- LOGGED IN SCREEN ---------- */}
-              {screen === "loggedIn" && (
-                <div className="text-center fade-in">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-green-50 border-2 border-green-300 rounded-full flex items-center justify-center">
-                    <span className="text-3xl">✓</span>
+              {/* ---------- CODE ---------- */}
+              {screen === "code" && (
+                <div className="fade-in" key="code">
+                  <div className="login-header">
+                    <div className="otp-icon">📬</div>
+                    <div className="login-title">輸入驗證碼</div>
+                    <div className="login-subtitle">
+                      我哋已經寄咗 6 位數字驗證碼去<br/>
+                      <span className="login-subtitle-strong">{email}</span>
+                    </div>
                   </div>
-                  <h1 className="text-2xl font-semibold text-stone-900 mb-2">
-                    登入成功!
-                  </h1>
-                  <p className="text-sm text-stone-500 mb-6">
-                    歡迎返嚟,<br />
-                    <span className="text-stone-900 font-medium">{loggedInEmail}</span>
-                  </p>
 
-                  <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 mb-6 text-left">
-                    <p className="text-xs text-stone-500 mb-1">Session token (debug):</p>
-                    <p className="text-xs text-stone-700 font-mono break-all">
-                      {localStorage.getItem("linkinhk_token")?.slice(0, 32)}...
+                  <div className="login-body">
+                    <div className="field" style={{ marginBottom: 16 }}>
+                      <input
+                        ref={codeInputRef}
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        className="text-input code-input"
+                        value={code}
+                        onChange={handleCodeChange}
+                        onKeyDown={handleCodeKeyDown}
+                        placeholder="000000"
+                        disabled={status === "loading"}
+                      />
+                    </div>
+
+                    {status === "error" && (
+                      <div className="error-box fade-in">{errorMsg}</div>
+                    )}
+
+                    <div className="login-meta">
+                      <button onClick={handleBackToEmail} className="login-link">
+                        ← 返回
+                      </button>
+                      <button
+                        onClick={handleResend}
+                        disabled={status === "loading"}
+                        className="login-link underline"
+                      >
+                        重新傳送驗證碼
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="login-nav-row">
+                    <button
+                      onClick={handleCodeSubmit}
+                      disabled={status === "loading" || code.length !== 6}
+                      className="nav-btn primary"
+                      style={{ width: "100%" }}
+                    >
+                      {status === "loading" ? "驗證緊..." : "登入 💜"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ---------- LOGGED IN ---------- */}
+              {screen === "loggedIn" && (
+                <div className="fade-in" key="loggedIn">
+                  <div className="success-screen">
+                    <div className="success-icon">✓</div>
+                    <div className="success-title">登入成功!</div>
+                    <div className="success-subtitle">
+                      歡迎返嚟,<br/>
+                      <span className="login-subtitle-strong">{loggedInEmail}</span>
+                    </div>
+                  </div>
+
+                  <div className="login-body">
+                    <div className="debug-box">
+                      <div className="debug-box-label">Session token (debug):</div>
+                      <div className="debug-box-value">
+                        {localStorage.getItem("linkinhk_token")?.slice(0, 32)}...
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--text-light)", textAlign: "center" }}>
+                      會員專區仲未起好,呢度只係測試登入成功 ✨
                     </p>
                   </div>
 
-                  <p className="text-xs text-stone-400 mb-6">
-                    會員專區仲未起好,呢度只係測試登入成功 ✨
-                  </p>
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 font-medium py-3 px-4 rounded-lg transition"
-                  >
-                    登出
-                  </button>
+                  <div className="login-nav-row">
+                    <button
+                      onClick={handleLogout}
+                      className="nav-btn secondary"
+                      style={{ width: "100%" }}
+                    >
+                      登出
+                    </button>
+                  </div>
                 </div>
               )}
 
             </div>
 
-            {/* Footer */}
-            <p className="text-center text-xs text-stone-400 mt-6">
-              Link in HK · linkinhk.com
-            </p>
+            <div className="site-footer">Link in HK · linkinhk.com</div>
           </div>
         </div>
       );
