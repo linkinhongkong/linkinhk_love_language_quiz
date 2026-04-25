@@ -58,12 +58,14 @@ function HistoryCard({ match, onClick }) {
       </div>
       <div className="history-card-body">
         <div>
-          {p.name && <div className="history-card-name">{p.name}</div>}
+          <div className="history-card-header">
+            {p.name && <div className="history-card-name">{p.name}</div>}
+            <StatusChip matched={matched} />
+          </div>
           <div className="flex flex-wrap gap-sm">
             {buildChips(p).map((c, i) => (
               <HistoryInfoChip key={i} text={c} />
             ))}
-            <StatusChip matched={matched} />
           </div>
         </div>
         <div className="history-card-time">{formatMatchTime(match.createdAt)}</div>
