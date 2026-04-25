@@ -15,7 +15,7 @@ function HistoryTab({ profile, history }) {
   });
 
   if (selected) {
-    return <HistoryDetail match={selected} profile={profile} onBack={() => setSelected(null)} />;
+    return <HistoryDetail match={selected} onBack={() => setSelected(null)} />;
   }
 
   if (uniqueHistory.length === 0) {
@@ -34,7 +34,6 @@ function HistoryTab({ profile, history }) {
         <HistoryCard
           key={`${(m.partnerProfile && m.partnerProfile.email) || "?"}-${m.createdAt || i}`}
           match={m}
-          profile={profile}
           onClick={() => setSelected(m)}
         />
       ))}
@@ -43,10 +42,10 @@ function HistoryTab({ profile, history }) {
 }
 
 // ---------------- Card (list view) ----------------
-function HistoryCard({ match, profile, onClick }) {
+function HistoryCard({ match, onClick }) {
   const p = match.partnerProfile || {};
   const photo = p["my-photo-1"] || "";
-  const status = getMatchStatus(match, profile && profile.email);
+  const status = getMatchStatus(match);
 
   return (
     <button onClick={onClick} className="history-card">
@@ -76,12 +75,12 @@ function HistoryCard({ match, profile, onClick }) {
 }
 
 // ---------------- Detail view ----------------
-function HistoryDetail({ match, profile, onBack }) {
+function HistoryDetail({ match, onBack }) {
   const p = match.partnerProfile || {};
   const photos = ["my-photo-1", "my-photo-2", "my-photo-3"]
     .map((k) => p[k])
     .filter(Boolean);
-  const status = getMatchStatus(match, profile && profile.email);
+  const status = getMatchStatus(match);
 
   return (
     <div className="fade-in">
@@ -135,7 +134,7 @@ function StatusChip({ status }) {
   return <span className={"status-chip " + status.variant}>{status.text}</span>;
 }
 
-// Keys are `${yourStatus}|${partnerStatus}`. Keep all 9 entries even when text
+// Keys are `${myStatus}|${partnerStatus}`. Keep all 9 entries even when text
 // duplicates — each cell is independently editable.
 const MATCH_STATUS_TABLE = {
   "accept|accept":   { text: "配對成功",     variant: "matched"   },
@@ -154,13 +153,11 @@ function normalizeStatus(s) {
   return v === "accept" || v === "reject" ? v : "pending";
 }
 
-function getMatchStatus(match, myEmail) {
+function getMatchStatus(match) {
   if (!match) return null;
-  const me = String(myEmail || "").toLowerCase();
-  const isA = String(match["email-a"] || "").toLowerCase() === me;
-  const yours    = normalizeStatus(isA ? match["a-status"] : match["b-status"]);
-  const partners = normalizeStatus(isA ? match["b-status"] : match["a-status"]);
-  return MATCH_STATUS_TABLE[`${yours}|${partners}`];
+  const mine    = normalizeStatus(match.myStatus);
+  const partner = normalizeStatus(match.partnerStatus);
+  return MATCH_STATUS_TABLE[`${mine}|${partner}`];
 }
 
 function buildChips(p) {
