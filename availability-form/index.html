@@ -15,9 +15,20 @@
   <style>
     /* Page-specific: availability grid only. All other styling comes from /shared/design-system.css */
 
-    /* Use `clip` instead of `hidden` so the page (not form-card) is the
-       scroll container for the sticky header row on step 2. */
-    .form-card { overflow: clip; }
+    /* Make form-card non-clipping so the page (not the card) is the
+       scroll container for the sticky step-2 header. Round the decorative
+       top bar to compensate for the dropped overflow clip. */
+    .form-card { overflow: visible; }
+    .form-card::before {
+      border-top-left-radius: var(--radius);
+      border-top-right-radius: var(--radius);
+    }
+    @media (max-width: 500px) {
+      .form-card::before {
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+      }
+    }
 
     .avail-intro {
       background: var(--yellow-bg);
@@ -31,10 +42,20 @@
     }
 
     .avail-table {
+      width: 100%;
+    }
+    .avail-thead,
+    .avail-tbody {
       display: grid;
       grid-template-columns: minmax(60px, 88px) repeat(4, 1fr);
       gap: 4px;
-      width: 100%;
+    }
+    .avail-thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--card);
+      padding-bottom: 4px;
     }
     .avail-head-cell,
     .avail-date-cell,
@@ -55,10 +76,6 @@
       line-height: 1.2;
       color: var(--text-muted);
       border-bottom: 1px solid var(--border-light);
-      background: var(--card);
-      position: sticky;
-      top: 0;
-      z-index: 2;
     }
     .avail-head-cell .head-time {
       font-size: 10px;
@@ -128,10 +145,12 @@
 
     /* Tight mobile: shrink date label column + gaps so the grid never overflows */
     @media (max-width: 380px) {
-      .avail-table {
+      .avail-thead,
+      .avail-tbody {
         grid-template-columns: minmax(52px, 64px) repeat(4, 1fr);
         gap: 3px;
       }
+      .avail-thead { padding-bottom: 3px; }
       .avail-date-cell { font-size: 11px; }
       .avail-head-cell { font-size: 12px; }
       .avail-head-cell .head-time { font-size: 9px; }
@@ -231,36 +250,40 @@
     function AvailabilityGrid({ dates, slots, onToggle }) {
       return (
         <div className="avail-table" role="grid" aria-label="每日時段選擇">
-          <div className="avail-head-cell avail-head-corner" aria-hidden="true"></div>
-          {TIME_SLOTS.map(s => (
-            <div key={s.key} className="avail-head-cell" title={s.label}>
-              <span>{s.name}</span>
-              <span className="head-time">{s.time}</span>
-            </div>
-          ))}
-          {dates.map(d => (
-            <React.Fragment key={d.iso}>
-              <div className={`avail-date-cell ${d.isWeekend ? "weekend" : ""}`}>
-                <span>{d.label}</span>
-                <span className="date-dow">({d.dowLabel})</span>
+          <div className="avail-thead" role="row">
+            <div className="avail-head-cell avail-head-corner" aria-hidden="true"></div>
+            {TIME_SLOTS.map(s => (
+              <div key={s.key} className="avail-head-cell" title={s.label}>
+                <span>{s.name}</span>
+                <span className="head-time">{s.time}</span>
               </div>
-              {TIME_SLOTS.map(s => {
-                const on = !!(slots[d.iso] && slots[d.iso][s.key]);
-                return (
-                  <button
-                    key={s.key}
-                    type="button"
-                    className={`avail-slot-cell ${on ? "active" : ""}`}
-                    aria-pressed={on}
-                    aria-label={`${d.label} ${s.label} ${on ? "已選" : "未選"}`}
-                    onClick={() => onToggle(d.iso, s.key)}
-                  >
-                    ✓
-                  </button>
-                );
-              })}
-            </React.Fragment>
-          ))}
+            ))}
+          </div>
+          <div className="avail-tbody">
+            {dates.map(d => (
+              <React.Fragment key={d.iso}>
+                <div className={`avail-date-cell ${d.isWeekend ? "weekend" : ""}`}>
+                  <span>{d.label}</span>
+                  <span className="date-dow">({d.dowLabel})</span>
+                </div>
+                {TIME_SLOTS.map(s => {
+                  const on = !!(slots[d.iso] && slots[d.iso][s.key]);
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      className={`avail-slot-cell ${on ? "active" : ""}`}
+                      aria-pressed={on}
+                      aria-label={`${d.label} ${s.label} ${on ? "已選" : "未選"}`}
+                      onClick={() => onToggle(d.iso, s.key)}
+                    >
+                      ✓
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       );
     }
