@@ -3,7 +3,9 @@
 // ============================================================
 
 function EventsTab({ profile, events }) {
-  const list = Array.isArray(events) ? events : [];
+  const list = (Array.isArray(events) ? events : []).filter(
+    (e) => e && (e.activity || e.date || e.time || e.location || e.partnerName)
+  );
 
   if (list.length === 0) {
     return (
