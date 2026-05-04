@@ -215,7 +215,33 @@ function ActionButtons({ onAccept, onReject, disabled }) {
 }
 
 // ---------------- Empty state ----------------
-function NoMatchState() {
+function NoMatchState({ rejected }) {
+  if (rejected) {
+    return (
+      <div className="flex flex-col items-center justify-center fade-in" style={{ padding: "60px 16px" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>💚</div>
+        <p style={{ color: "var(--text)", fontSize: 15, textAlign: "center", maxWidth: 360, lineHeight: 1.7, marginBottom: 24 }}>
+          如果今次配對未係你想認識嘅類型,你可以到會員中心更新理想對象,或者直接{" "}
+          <a
+            href="https://instagram.com/linkinhk"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--primary)", fontWeight: 600 }}
+          >
+            DM 我哋
+          </a>
+          ,等 AI 之後幫你配得更準 ✨
+        </p>
+        <button
+          type="button"
+          onClick={() => { window.location.hash = "ideal"; }}
+          className="btn-pill primary"
+        >
+          更新理想對象
+        </button>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col items-center justify-center fade-in" style={{ padding: "80px 0" }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>💌</div>
@@ -233,6 +259,7 @@ function MatchTab({ profile, currentMatch, onMatchResponded }) {
   const [actionError, setActionError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [responded, setResponded] = useState(false);
+  const [justRejected, setJustRejected] = useState(false);
 
   const handleResponse = async (response) => {
     if (submitting || !currentMatch) return;
@@ -251,6 +278,7 @@ function MatchTab({ profile, currentMatch, onMatchResponded }) {
       if (data.success) {
         setToast(response === "accept" ? "已回覆: 想認識 💚" : "已回覆: 無興趣");
         setResponded(true);
+        if (response === "reject") setJustRejected(true);
         if (onMatchResponded) onMatchResponded();
       } else {
         setActionError(data.error || "出錯,請再試");
@@ -273,7 +301,7 @@ function MatchTab({ profile, currentMatch, onMatchResponded }) {
   if (responded || !currentMatch || !currentMatch.partnerProfile || myStatus !== "pending") {
     return (
       <>
-        <NoMatchState />
+        <NoMatchState rejected={justRejected} />
         {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       </>
     );
