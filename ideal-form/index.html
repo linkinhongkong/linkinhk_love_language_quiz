@@ -390,6 +390,18 @@
     }
 
     function RangeField({ min, max, valMin, valMax, onMinChange, onMaxChange, unit }) {
+      const handleChange = (onChange) => (e) => {
+        const raw = e.target.value;
+        if (raw === "") { onChange(""); return; }
+        const n = parseInt(raw, 10);
+        if (!isNaN(n)) onChange(n);
+      };
+      const handleBlur = (val, onChange) => () => {
+        if (val === "" || val === null || val === undefined) return;
+        const n = parseInt(val, 10);
+        if (isNaN(n)) { onChange(""); return; }
+        onChange(Math.max(min, Math.min(n, max)));
+      };
       return (
         <div className="range-inputs">
           <div className="range-input-group">
@@ -402,11 +414,8 @@
                 value={valMin}
                 min={min}
                 max={max}
-                onChange={(e) => {
-                  const n = parseInt(e.target.value);
-                  if (!isNaN(n)) onMinChange(Math.max(min, Math.min(n, max)));
-                  else onMinChange("");
-                }}
+                onChange={handleChange(onMinChange)}
+                onBlur={handleBlur(valMin, onMinChange)}
               />
               <span className="range-input-unit">{unit}</span>
             </div>
@@ -422,11 +431,8 @@
                 value={valMax}
                 min={min}
                 max={max}
-                onChange={(e) => {
-                  const n = parseInt(e.target.value);
-                  if (!isNaN(n)) onMaxChange(Math.max(min, Math.min(n, max)));
-                  else onMaxChange("");
-                }}
+                onChange={handleChange(onMaxChange)}
+                onBlur={handleBlur(valMax, onMaxChange)}
               />
               <span className="range-input-unit">{unit}</span>
             </div>
