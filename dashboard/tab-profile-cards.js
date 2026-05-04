@@ -2,8 +2,8 @@
 // tab-profile-cards.js — WhoIAm profile cards + edit sheets
 // ============================================================
 
-const UPDATE_BIO_URL = `${window.N8N_BASE}/update-bio`;
-const UPDATE_PHOTO_URL = `${window.N8N_BASE}/update-photo`;
+const UPDATE_BIO_URL = window.webhookUrl("update-bio");
+const UPDATE_PHOTO_URL = window.webhookUrl("update-photo");
 
 function authPostCustom(url, body, isFormData) {
   const token = getToken() || "";

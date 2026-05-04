@@ -5,11 +5,12 @@
 const { useState, useEffect } = React;
 
 // ---------------- API endpoints ----------------
-// N8N_BASE is set by /shared/config.js based on hostname (prod vs uat).
+// webhookUrl() is provided by /shared/config.js; it adds the "uat-" path
+// prefix automatically when running on a UAT hostname.
 const API = {
-  GET_PROFILE: `${window.N8N_BASE}/get-profile`,
-  BOOTSTRAP: `${window.N8N_BASE}/get-dashboard-bootstrap`,
-  RESPOND_TO_MATCH: `${window.N8N_BASE}/respond-to-match`,
+  GET_PROFILE: window.webhookUrl("get-profile"),
+  BOOTSTRAP: window.webhookUrl("get-dashboard-bootstrap"),
+  RESPOND_TO_MATCH: window.webhookUrl("respond-to-match"),
 };
 
 // ---------------- Tab definitions ----------------

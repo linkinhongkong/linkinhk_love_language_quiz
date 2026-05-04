@@ -1,6 +1,8 @@
 // ============================================================
-// config.js — environment detection and API base URLs
-// Loaded before any other script that calls n8n webhooks.
+// config.js — environment detection and webhook URL builder.
+// Loaded as a regular <script> before any code that calls n8n,
+// so window.webhookUrl is defined before babel-transformed
+// scripts (lib.js, components.js, etc.) execute.
 // ============================================================
 (function () {
   var host = (typeof location !== "undefined" && location.hostname) || "";
@@ -16,12 +18,14 @@
 
   var ENV = isUat ? "uat" : "prod";
 
-  var N8N_BASES = {
-    prod: "https://linkinhk.app.n8n.cloud/webhook",
-    // TODO: replace with the UAT n8n instance/workspace base URL once provisioned.
-    uat: "https://linkinhk.app.n8n.cloud/webhook-test",
-  };
+  // Single n8n project hosts both environments; UAT workflows live alongside
+  // prod and are distinguished by a "uat-" prefix on the webhook path.
+  var N8N_BASE = "https://linkinhk.app.n8n.cloud/webhook";
+  var PATH_PREFIX = ENV === "uat" ? "uat-" : "";
 
   window.LINKINHK_ENV = ENV;
-  window.N8N_BASE = N8N_BASES[ENV];
+  window.N8N_BASE = N8N_BASE;
+  window.webhookUrl = function (name) {
+    return N8N_BASE + "/" + PATH_PREFIX + name;
+  };
 })();

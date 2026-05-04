@@ -132,8 +132,8 @@
   <script type="text/babel">
     const { useState, useRef, useEffect } = React;
 
-    const REQUEST_OTP_URL = `${window.N8N_BASE}/request-otp`;
-    const VERIFY_OTP_URL = `${window.N8N_BASE}/verify-otp`;
+    const REQUEST_OTP_URL = window.webhookUrl("request-otp");
+    const VERIFY_OTP_URL = window.webhookUrl("verify-otp");
 
     function LoginPage() {
       // screens: "checking" | "email" | "code" | "loggedIn"
