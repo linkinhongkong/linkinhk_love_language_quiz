@@ -143,6 +143,51 @@
     }
     .avail-reset-btn:hover { background: var(--accent-soft); }
 
+    /* ── Activity ranking (matches member-form love language) ── */
+    .field-hint { font-size: 12px; color: var(--text-light); margin-bottom: 8px; line-height: 1.5; }
+    .rank-list { display: flex; flex-direction: column; gap: 8px; }
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      border: 2px solid #e8e8e8;
+      user-select: none;
+    }
+    .rank-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .rank-label { font-size: 14px; font-weight: 500; }
+    .rank-sublabel { font-size: 12px; color: var(--text-light); }
+    .rank-arrows { display: flex; flex-direction: column; gap: 2px; }
+    .rank-arrow {
+      width: 28px; height: 22px;
+      border: none;
+      background: var(--chip-bg);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rank-arrow:hover { background: #ddd; }
+    .rank-arrow:disabled { opacity: 0.3; cursor: default; }
+
     /* Tight mobile: shrink date label column + gaps so the grid never overflows */
     @media (max-width: 380px) {
       .avail-thead,
@@ -198,6 +243,16 @@
       { label: "香港島" },
       { label: "新界" },
     ];
+
+    const ACTIVITIES_FALLBACK = [
+      { id: "coffee",   icon: "☕", label: "咖啡工作坊", sub: "觀唐" },
+      { id: "golf",     icon: "⛳", label: "室內高爾夫", sub: "銅鑼灣" },
+      { id: "cocktail", icon: "🍸", label: "調酒工作坊", sub: "中環" },
+    ];
+    const ACTIVITY_QUESTION_FALLBACK = {
+      label: "請排序你最想參加嘅活動",
+      hint: "用箭頭調整順序（最想參加嘅排最上面）",
+    };
 
     const DOW_TC = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -332,6 +387,39 @@
       const [slots, setSlots] = useState({});          // { [iso]: { morning: bool, ... } }
       const [prefillApplied, setPrefillApplied] = useState(false);
 
+      const [activities, setActivities] = useState(ACTIVITIES_FALLBACK);
+      const [activityQuestion, setActivityQuestion] = useState(ACTIVITY_QUESTION_FALLBACK);
+      const [activityRank, setActivityRank] = useState(ACTIVITIES_FALLBACK.map(a => a.id));
+
+      useEffect(() => {
+        fetch("/data/activities.json?t=" + Date.now(), { cache: "no-store" })
+          .then(r => r.ok ? r.json() : null)
+          .then(cfg => {
+            if (!cfg || !Array.isArray(cfg.items) || cfg.items.length === 0) return;
+            const valid = cfg.items.filter(a => a && a.id && a.label);
+            if (valid.length === 0) return;
+            setActivities(valid);
+            setActivityRank(valid.map(a => a.id));
+            if (cfg.question && (cfg.question.label || cfg.question.hint)) {
+              setActivityQuestion({
+                label: cfg.question.label || ACTIVITY_QUESTION_FALLBACK.label,
+                hint: cfg.question.hint || ACTIVITY_QUESTION_FALLBACK.hint,
+              });
+            }
+          })
+          .catch(() => { /* fallback values already set */ });
+      }, []);
+
+      const moveActivity = (idx, dir) => {
+        setActivityRank(prev => {
+          const arr = [...prev];
+          const newIdx = idx + dir;
+          if (newIdx < 0 || newIdx >= arr.length) return prev;
+          [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+          return arr;
+        });
+      };
+
       const slotKeysFromStored = (storedArr) =>
         SLOT_STORED.filter(s => storedArr.includes(s.stored)).map(s => s.key);
 
@@ -349,20 +437,6 @@
       };
 
       const goStep2 = () => {
-        if (meetArea.length < 1) {
-          setAreaError("請選擇至少一個地區");
-          setToast("仲有 1 題未填 ✏️");
-          setTimeout(() => setToast(""), 2200);
-          setTimeout(() => {
-            const firstErr = document.querySelector(".field-error");
-            if (firstErr) {
-              const field = firstErr.closest(".field") || firstErr;
-              field.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-          }, 80);
-          return;
-        }
-        setAreaError("");
         // Seed page 2 on first entry; on re-entry keep user edits untouched.
         if (!prefillApplied) {
           setSlots(buildPrefill());
@@ -427,6 +501,7 @@
           meet_areas: meetArea,
           weekday_availability: weekday,
           weekend_availability: weekend,
+          activity_rank: activityRank,
           selected_slots: selected,
           total_slots: selected.length,
         };
@@ -529,12 +604,6 @@
                   <div className="step-body">
                     <div className="step-content">
                       <div className="field">
-                        <div className="field-label">想喺邊區見面？（可多選,最少 1 項）</div>
-                        <MultiChipGrid options={MEET_AREA_OPTIONS} value={meetArea} onToggle={toggleMeetArea} />
-                        {areaError && <div className="field-error">{areaError}</div>}
-                      </div>
-
-                      <div className="field">
                         <div className="field-label">你平日通常邊啲時段有空？（可多選）</div>
                         <MultiChipGrid options={SLOT_OPTIONS} value={weekday} onToggle={toggleWeekday} />
                       </div>
@@ -542,6 +611,30 @@
                       <div className="field">
                         <div className="field-label">你週末通常邊啲時段有空？（可多選）</div>
                         <MultiChipGrid options={SLOT_OPTIONS} value={weekend} onToggle={toggleWeekend} />
+                      </div>
+
+                      <div className="field">
+                        <div className="field-label">{activityQuestion.label}</div>
+                        <div className="field-hint">{activityQuestion.hint}</div>
+                        <div className="rank-list">
+                          {activityRank.map((id, idx) => {
+                            const act = activities.find(a => a.id === id);
+                            if (!act) return null;
+                            return (
+                              <div className="rank-item" key={id}>
+                                <div className="rank-num">{idx + 1}</div>
+                                <div style={{ flex: 1 }}>
+                                  <div className="rank-label">{act.icon} {act.label}</div>
+                                  {act.sub && <div className="rank-sublabel">{act.sub}</div>}
+                                </div>
+                                <div className="rank-arrows">
+                                  <button type="button" className="rank-arrow" disabled={idx === 0} onClick={() => moveActivity(idx, -1)}>▲</button>
+                                  <button type="button" className="rank-arrow" disabled={idx === activityRank.length - 1} onClick={() => moveActivity(idx, 1)}>▼</button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
